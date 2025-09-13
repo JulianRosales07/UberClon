@@ -1,0 +1,31 @@
+/* Ensure map doesn't interfere with UI elements */
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  display: none !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 700 !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-tile-pane {
+  z-index: 200 !important;
+}
+
+/* Ensure UI elements are above map */
+.driver-ui-overlay {
+  position: relative;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.driver-ui-overlay > * {
+  pointer-events: auto;
+}

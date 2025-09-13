@@ -14,11 +14,10 @@ interface User {
 }
 
 export const Login: React.FC = () => {
-  const [userType, setUserType] = useState<'passenger' | 'driver'>('passenger');
+  const { setUser, setShowLogin } = useAppStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const { setUser } = useAppStore();
 
   const handleLogin = () => {
     if (!name || !email || !phone) return;
@@ -29,53 +28,44 @@ export const Login: React.FC = () => {
       email,
       phone,
       rating: 4.8,
-      userType
+      userType: 'driver' // Solo para conductores
     };
 
     setUser(user);
+  };
+
+  const handleBack = () => {
+    setShowLogin(null); // Volver a la página principal
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-black mb-2">Uber</h1>
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={handleBack}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 className="text-4xl font-bold text-black">Uber</h1>
+            <div className="w-10"></div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            Bienvenido
+            Iniciar sesión como Conductor
           </h2>
         </div>
 
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* User Type Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              ¿Cómo quieres usar Uber?
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setUserType('passenger')}
-                className={`flex flex-col items-center p-4 border-2 rounded-lg transition-colors ${
-                  userType === 'passenger'
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <Users className="w-8 h-8 mb-2" />
-                <span className="font-medium">Pasajero</span>
-              </button>
-              
-              <button
-                onClick={() => setUserType('driver')}
-                className={`flex flex-col items-center p-4 border-2 rounded-lg transition-colors ${
-                  userType === 'driver'
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <Car className="w-8 h-8 mb-2" />
-                <span className="font-medium">Conductor</span>
-              </button>
+          {/* Driver Icon */}
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-black rounded-full mx-auto flex items-center justify-center mb-4">
+              <Car className="w-10 h-10 text-white" />
             </div>
+            <p className="text-gray-600">Ingresa tus datos para comenzar a conducir</p>
           </div>
 
           {/* Form */}

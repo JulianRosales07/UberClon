@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, MapPin, Star, Plus } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Star, Plus, UserCheck } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
 
 interface Location {
   lat: number;
@@ -26,6 +27,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   onLocationSelect,
   currentLocation
 }) => {
+  const { user, logout } = useAppStore();
   const [pickupInput, setPickupInput] = useState(currentLocation?.address || 'Cra 22d #717');
   const [destinationInput, setDestinationInput] = useState('');
   const [activeInput, setActiveInput] = useState<'pickup' | 'destination'>('destination');
@@ -92,6 +94,10 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
     }
   };
 
+  const handleDriverLogin = () => {
+    logout(); // Cerrar sesión actual y volver a la página de inicio
+  };
+
   return (
     <div className="h-screen bg-white flex flex-col">
       {/* Header */}
@@ -103,7 +109,14 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <h1 className="text-lg font-semibold">Planifica tu viaje</h1>
-        <div className="w-10"></div> {/* Spacer for centering */}
+        <button
+          onClick={handleDriverLogin}
+          className="bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800 transition-colors flex items-center space-x-1 text-sm font-medium"
+          title="Iniciar sesión como conductor"
+        >
+          <UserCheck className="w-4 h-4" />
+          <span>Conductor</span>
+        </button>
       </div>
 
       {/* Trip Options */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Clock, Car, Bike, Calendar, User, Grid, Activity, UserCircle, Home, ArrowLeft, LogOut, Menu, X, MapPin } from 'lucide-react';
+import { Search, Clock, Car, Bike, Calendar, User, Grid, Activity, UserCircle, Home, ArrowLeft, LogOut, Menu, X, MapPin, UserCheck } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 interface Location {
@@ -90,6 +90,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         logout();
     };
 
+    const handleDriverLogin = () => {
+        logout(); // Cerrar sesión actual y volver a la página de inicio
+    };
+
     const handleQuickRideClick = () => {
         setShowQuickOptions(true);
     };
@@ -113,7 +117,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="bg-white px-4 py-6">
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-3xl font-bold">Uber</h1>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                        <button
+                            onClick={handleDriverLogin}
+                            className="bg-black text-white px-3 py-2 rounded-full hover:bg-gray-800 transition-colors flex items-center space-x-2 text-sm font-medium"
+                            title="Iniciar sesión como conductor"
+                        >
+                            <UserCheck className="w-4 h-4" />
+                            <span>Conductor</span>
+                        </button>
                         <button
                             onClick={handleLogout}
                             className="p-2 rounded-full hover:bg-gray-100 transition-colors"

@@ -7,7 +7,7 @@ import { SearchScreen } from './SearchScreen';
 import { HomeScreen } from './HomeScreen';
 import { useAppStore } from '../../store/useAppStore';
 import { getNearbyDrivers, requestRide } from '../../services/rideService';
-import { MapPin, Navigation, X, ArrowLeft } from 'lucide-react';
+import { MapPin, Navigation, X, ArrowLeft, UserCheck } from 'lucide-react';
 import { Button } from '../common/Button';
 
 interface Location {
@@ -32,6 +32,8 @@ export const PassengerHome: React.FC = () => {
     currentTrip,
     rideRequest,
     nearbyDrivers,
+    user,
+    logout,
     setPickupLocation,
     setDestinationLocation,
     setRideRequest,
@@ -163,6 +165,10 @@ export const PassengerHome: React.FC = () => {
   const handleCancelRequest = () => {
     setRideRequest(null);
     setShowRideOptions(false);
+  };
+
+  const handleDriverLogin = () => {
+    logout(); // Cerrar sesión actual y volver a la página de inicio
   };
 
   // Cargar conductores cercanos cuando se establece la ubicación
@@ -305,7 +311,14 @@ export const PassengerHome: React.FC = () => {
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <h1 className="text-lg font-semibold">Solicitar viaje</h1>
-        <div className="w-10"></div> {/* Spacer for centering */}
+        <button
+          onClick={handleDriverLogin}
+          className="bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800 transition-colors flex items-center space-x-1 text-sm font-medium"
+          title="Iniciar sesión como conductor"
+        >
+          <UserCheck className="w-4 h-4" />
+          <span>Conductor</span>
+        </button>
       </div>
 
       <div className="flex-1">

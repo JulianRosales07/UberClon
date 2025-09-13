@@ -69,6 +69,7 @@ interface AppState {
   // UI state
   isLoading: boolean;
   error: string | null;
+  showLogin: 'passenger' | 'driver' | null;
   
   // Actions
   setUser: (user: User | null) => void;
@@ -82,6 +83,7 @@ interface AppState {
   setError: (error: string | null) => void;
   clearError: () => void;
   logout: () => void;
+  setShowLogin: (type: 'passenger' | 'driver' | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -96,9 +98,10 @@ export const useAppStore = create<AppState>((set) => ({
   nearbyDrivers: [],
   isLoading: false,
   error: null,
+  showLogin: null,
   
   // Actions
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => set({ user, isAuthenticated: !!user, showLogin: null }),
   setCurrentLocation: (location) => set({ currentLocation: location }),
   setPickupLocation: (location) => set({ pickupLocation: location }),
   setDestinationLocation: (location) => set({ destinationLocation: location }),
@@ -114,6 +117,8 @@ export const useAppStore = create<AppState>((set) => ({
     currentTrip: null, 
     rideRequest: null,
     pickupLocation: null,
-    destinationLocation: null
+    destinationLocation: null,
+    showLogin: null
   }),
+  setShowLogin: (type) => set({ showLogin: type }),
 }));
