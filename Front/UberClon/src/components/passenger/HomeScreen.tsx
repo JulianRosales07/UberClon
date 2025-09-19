@@ -44,39 +44,75 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     const quickDestinations = [
         {
             id: '1',
-            name: 'Centro Comercial',
+            name: 'Unicentro',
             address: 'Centro Comercial Unicentro',
-            distance: '2.5 km',
-            price: 8500,
-            estimatedTime: 8,
-            coordinates: { lat: 1.2136, lng: -77.2811 }
+            distance: '1.6 km',
+            price: 6500,
+            estimatedTime: 6,
+            coordinates: { lat: 1.216386, lng: -77.288671 }
         },
         {
             id: '2',
-            name: 'Terminal',
-            address: 'Terminal de Transporte',
-            distance: '3.2 km',
-            price: 10200,
-            estimatedTime: 12,
-            coordinates: { lat: 1.2089, lng: -77.2756 }
+            name: 'Avenida de los Estudiantes',
+            address: 'Avenida de los Estudiantes',
+            distance: '750 m',
+            price: 4500,
+            estimatedTime: 3,
+            coordinates: { lat: 1.226829, lng: -77.282465 }
         },
         {
             id: '3',
-            name: 'Universidad',
-            address: 'Universidad de Nariño',
-            distance: '4.1 km',
-            price: 12800,
-            estimatedTime: 15,
-            coordinates: { lat: 1.2234, lng: -77.2881 }
+            name: 'Universidad Mariana',
+            address: 'Universidad Mariana',
+            distance: '150 m',
+            price: 3500,
+            estimatedTime: 1,
+            coordinates: { lat: 1.223802, lng: -77.283742 }
         },
         {
             id: '4',
-            name: 'Aeropuerto',
-            address: 'Aeropuerto Antonio Nariño',
-            distance: '15 km',
-            price: 35000,
-            estimatedTime: 25,
-            coordinates: { lat: 1.4019, lng: -77.2914 }
+            name: 'Único',
+            address: 'Centro Comercial Único',
+            distance: '4.1 km',
+            price: 12800,
+            estimatedTime: 14,
+            coordinates: { lat: 1.205879, lng: -77.260628 }
+        },
+        {
+            id: '5',
+            name: 'Tamasagra',
+            address: 'Tamasagra',
+            distance: '3.1 km',
+            price: 10500,
+            estimatedTime: 11,
+            coordinates: { lat: 1.204400, lng: -77.293005 }
+        },
+        {
+            id: '6',
+            name: 'Estadio Libertad',
+            address: 'Estadio Libertad',
+            distance: '4.2 km',
+            price: 13000,
+            estimatedTime: 14,
+            coordinates: { lat: 1.198087, lng: -77.278660 }
+        },
+        {
+            id: '7',
+            name: 'Parque Infantil',
+            address: 'Parque Infantil',
+            distance: '750 m',
+            price: 4500,
+            estimatedTime: 3,
+            coordinates: { lat: 1.218915, lng: -77.281944 }
+        },
+        {
+            id: '8',
+            name: 'Alvernia',
+            address: 'Alvernia',
+            distance: '2.4 km',
+            price: 8500,
+            estimatedTime: 8,
+            coordinates: { lat: 1.220019, lng: -77.298537 }
         }
     ];
 
@@ -100,13 +136,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
     const handleQuickDestinationSelect = async (destination: QuickDestination) => {
         setShowQuickOptions(false);
-        setIsSearchingDriver(true);
-
-        // Simular un pequeño delay para mostrar el estado de carga
-        setTimeout(() => {
-            setIsSearchingDriver(false);
-            onQuickRide(destination);
-        }, 1500);
+        // En lugar de buscar conductor inmediatamente, ir al mapa para mostrar la ruta
+        onQuickRide(destination);
     };
 
     return (
@@ -171,8 +202,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         <div className="w-3 h-3 bg-white rounded-full"></div>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-gray-900">Genoy</h3>
-                        <p className="text-sm text-gray-500">Pasto, Nariño</p>
+                        <h3 className="font-semibold text-gray-900">Centro de Pasto</h3>
+                        <p className="text-sm text-gray-500">Ubicación Actual - Pasto, Nariño</p>
                     </div>
                 </div>
             </div>

@@ -47,29 +47,15 @@ export const PassengerHome: React.FC = () => {
   const [showHomeScreen, setShowHomeScreen] = useState(true);
 
   useEffect(() => {
-    // Simular obtención de ubicación actual
+    // Siempre usar ubicación de Pasto como ubicación actual
     if (!currentLocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location: Location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            address: 'Tu ubicación actual'
-          };
-          setCurrentLocation(location);
-          setPickupLocation(location);
-        },
-        () => {
-          // Ubicación por defecto (Bogotá)
-          const defaultLocation: Location = {
-            lat: 4.6097,
-            lng: -74.0817,
-            address: 'Bogotá, Colombia'
-          };
-          setCurrentLocation(defaultLocation);
-          setPickupLocation(defaultLocation);
-        }
-      );
+      const pastoLocation: Location = {
+        lat: 1.223789,
+        lng: -77.283255,
+        address: ' Tu ubicacion, Pasto'
+      };
+      setCurrentLocation(pastoLocation);
+      setPickupLocation(pastoLocation);
     }
   }, [currentLocation, setCurrentLocation, setPickupLocation]);
 
@@ -88,9 +74,7 @@ export const PassengerHome: React.FC = () => {
   const handleQuickRide = async (destination?: any) => {
     if (currentLocation) {
       let targetDestination: Location;
-      let estimatedFare: number;
-      let estimatedTime: number;
-      
+
       if (destination) {
         // Usar destino específico seleccionado
         targetDestination = {
@@ -98,8 +82,6 @@ export const PassengerHome: React.FC = () => {
           lng: destination.coordinates.lng,
           address: destination.address
         };
-        estimatedFare = destination.price;
-        estimatedTime = destination.estimatedTime;
       } else {
         // Usar destino cercano por defecto
         targetDestination = {
@@ -107,34 +89,14 @@ export const PassengerHome: React.FC = () => {
           lng: currentLocation.lng + 0.01,
           address: 'Destino cercano'
         };
-        estimatedFare = 8500;
-        estimatedTime = 5;
       }
-      
+
       setPickupLocation(currentLocation);
       setDestinationLocation(targetDestination);
       setShowHomeScreen(false);
-      
-      // Crear solicitud de viaje rápido
-      const quickRequest: RideRequest = {
-        pickup: currentLocation,
-        destination: targetDestination,
-        estimatedFare: estimatedFare,
-        estimatedTime: estimatedTime,
-        distance: destination ? parseFloat(destination.distance) : 2
-      };
-      
-      setRideRequest(quickRequest);
-      
-      try {
-        // Simular búsqueda y asignación de conductor
-        const trip = await requestRide(currentLocation, targetDestination, estimatedFare);
-        setCurrentTrip(trip);
-        setRideRequest(null);
-      } catch (error) {
-        console.error('Error al solicitar viaje rápido:', error);
-        setRideRequest(null);
-      }
+
+      // Mostrar opciones de viaje
+      setShowRideOptions(true);
     }
   };
 
@@ -216,7 +178,7 @@ export const PassengerHome: React.FC = () => {
         <div className="h-screen flex flex-col">
           <div className="flex-1">
             <Map
-              center={currentLocation || { lat: 4.6097, lng: -74.0817 }}
+              center={currentLocation || { lat: 1.223789, lng: -77.283255 }}
               pickup={pickupLocation}
               destination={destinationLocation}
               drivers={nearbyDrivers}
@@ -252,7 +214,7 @@ export const PassengerHome: React.FC = () => {
       <div className="h-screen flex flex-col">
         <div className="flex-1">
           <Map
-            center={currentLocation || { lat: 4.6097, lng: -74.0817 }}
+            center={currentLocation || { lat: 1.223789, lng: -77.283255 }}
             pickup={pickupLocation}
             destination={destinationLocation}
             drivers={nearbyDrivers}
@@ -300,6 +262,8 @@ export const PassengerHome: React.FC = () => {
     );
   }
 
+
+
   return (
     <div className="h-screen flex flex-col">
       {/* Header with back button */}
@@ -323,7 +287,7 @@ export const PassengerHome: React.FC = () => {
 
       <div className="flex-1">
         <Map
-          center={currentLocation || { lat: 4.6097, lng: -74.0817 }}
+          center={currentLocation || { lat: 1.223789, lng: -77.283255 }}
           pickup={pickupLocation}
           destination={destinationLocation}
           drivers={nearbyDrivers}

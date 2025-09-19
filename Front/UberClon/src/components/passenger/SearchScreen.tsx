@@ -28,7 +28,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   currentLocation
 }) => {
   const { user, logout } = useAppStore();
-  const [pickupInput, setPickupInput] = useState(currentLocation?.address || 'Cra 22d #717');
+  const [pickupInput, setPickupInput] = useState(currentLocation?.address || 'Centro de Pasto, Nariño');
   const [destinationInput, setDestinationInput] = useState('');
   const [activeInput, setActiveInput] = useState<'pickup' | 'destination'>('destination');
   const [tripType, setTripType] = useState<'now' | 'later'>('now');
@@ -37,54 +37,89 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   const suggestions: LocationSuggestion[] = [
     {
       id: '1',
-      name: 'Genoy',
-      address: 'Pasto, Nariño',
-      distance: '7.4 mi',
+      name: 'Unicentro',
+      address: 'Centro Comercial Unicentro',
+      distance: '1.6 km',
       type: 'recent'
     },
     {
       id: '2',
-      name: 'Terminal De Transporte de Pasto',
-      address: 'Pasto, Nariño',
-      distance: '1.9 mi',
+      name: 'Avenida de los Estudiantes',
+      address: 'Avenida de los Estudiantes',
+      distance: '750 m',
       type: 'recent'
     },
     {
       id: '3',
       name: 'Universidad Mariana',
-      address: 'Cl 18 #34 - 104, Pasto, Nariño',
-      distance: '1.7 mi',
+      address: 'Universidad Mariana',
+      distance: '150 m',
       type: 'recent'
     },
     {
       id: '4',
-      name: 'Centro Comercial Unicentro Pasto',
-      address: 'Calle 11 No. 34 - 78, Av. Panamericana, La Aurora, San Juan de Pasto, Nariño',
-      distance: '1.0 mi',
+      name: 'Único',
+      address: 'Centro Comercial Único',
+      distance: '4.1 km',
       type: 'recent'
     },
     {
       id: '5',
-      name: 'Aeropuerto Antonio Nariño',
-      address: 'Aeropuerto, Antonio Nariño, Chachagüí, Nariño',
-      distance: '17 mi',
+      name: 'Tamasagra',
+      address: 'Tamasagra',
+      distance: '3.1 km',
+      type: 'recent'
+    },
+    {
+      id: '6',
+      name: 'Estadio Libertad',
+      address: 'Estadio Libertad',
+      distance: '4.2 km',
+      type: 'recent'
+    },
+    {
+      id: '7',
+      name: 'Parque Infantil',
+      address: 'Parque Infantil',
+      distance: '750 m',
+      type: 'recent'
+    },
+    {
+      id: '8',
+      name: 'Alvernia',
+      address: 'Alvernia',
+      distance: '2.4 km',
       type: 'recent'
     }
   ];
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
+    // Mapear las ubicaciones con sus coordenadas exactas
+    const locationCoordinates: Record<string, { lat: number; lng: number }> = {
+      'Unicentro': { lat: 1.216386, lng: -77.288671 },
+      'Avenida de los Estudiantes': { lat: 1.226829, lng: -77.282465 },
+      'Universidad Mariana': { lat: 1.223802, lng: -77.283742 },
+      'Único': { lat: 1.205879, lng: -77.260628 },
+      'Tamasagra': { lat: 1.204400, lng: -77.293005 },
+      'Estadio Libertad': { lat: 1.198087, lng: -77.278660 },
+      'Parque Infantil': { lat: 1.218915, lng: -77.281944 },
+      'Alvernia': { lat: 1.220019, lng: -77.298537 }
+    };
+
+    const coords = locationCoordinates[suggestion.name] || { lat: 1.223789, lng: -77.283255 };
+    
     const location: Location = {
-      lat: 4.6097 + Math.random() * 0.1,
-      lng: -74.0817 + Math.random() * 0.1,
-      address: suggestion.name
+      lat: coords.lat,
+      lng: coords.lng,
+      address: suggestion.address
     };
 
     if (activeInput === 'destination') {
       setDestinationInput(suggestion.name);
       // Simular selección automática cuando se elige destino
       const pickup: Location = {
-        lat: 4.6097,
-        lng: -74.0817,
+        lat: 1.223789, // Centro de Pasto
+        lng: -77.283255,
         address: pickupInput
       };
       onLocationSelect(pickup, location);

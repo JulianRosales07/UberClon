@@ -28,14 +28,26 @@ export const LocationInput: React.FC<LocationInputProps> = ({
     const newValue = e.target.value;
     setInputValue(newValue);
     
-    // Simular búsqueda de ubicaciones
+    // Simular búsqueda de ubicaciones en Pasto
     if (newValue.length > 2) {
-      const mockSuggestions: Location[] = [
-        { lat: 4.6097, lng: -74.0817, address: `${newValue} - Centro, Bogotá` },
-        { lat: 4.6351, lng: -74.0703, address: `${newValue} - Zona Rosa, Bogotá` },
-        { lat: 4.5981, lng: -74.0758, address: `${newValue} - Chapinero, Bogotá` },
+      const pastoLocations: Location[] = [
+        { lat: 1.223789, lng: -77.283255, address: ', Nariño' },
+        { lat: 1.216386, lng: -77.288671, address: 'Unicentro - Centro Comercial Unicentro' },
+        { lat: 1.226829, lng: -77.282465, address: 'Avenida de los Estudiantes' },
+        { lat: 1.223802, lng: -77.283742, address: 'Universidad Mariana' },
+        { lat: 1.205879, lng: -77.260628, address: 'Único - Centro Comercial Único' },
+        { lat: 1.204400, lng: -77.293005, address: 'Tamasagra' },
+        { lat: 1.198087, lng: -77.278660, address: 'Estadio Libertad' },
+        { lat: 1.218915, lng: -77.281944, address: 'Parque Infantil' },
+        { lat: 1.220019, lng: -77.298537, address: 'Alvernia' }
       ];
-      setSuggestions(mockSuggestions);
+
+      // Filtrar ubicaciones que coincidan con la búsqueda
+      const filteredSuggestions = pastoLocations.filter(location =>
+        location.address?.toLowerCase().includes(newValue.toLowerCase())
+      );
+
+      setSuggestions(filteredSuggestions.slice(0, 5)); // Mostrar máximo 5 sugerencias
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
