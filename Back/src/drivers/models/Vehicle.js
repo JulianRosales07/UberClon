@@ -103,4 +103,4 @@ vehicleSchema.methods.isFullyVerified = function() {
          this.documents.inspection.verified;
 };
 
-module.exports = mongoose.model('Vehicle', vehicleSchema);
+module.exports = mongoose.model('Vehicle', vehicleSchema); 
