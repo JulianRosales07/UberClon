@@ -218,4 +218,43 @@ const completeTrip = async (req, res) => {
         sendError(res, error);
     }
 };
+const cancelTrip = async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const userId = req.user.userId;
+        const { reason } = req.body;
+
+        const trip = await Trip.findById(tripId);
+        if (!trip) {
+            return sendError(res, "Viaje no encontrado", 404);
+        }
+
+        // Verificar que el usuario puede cancelar el viaje
+        const cancellationCheck = canCancelTrip(trip, userId, req.user.role);
+        if (!cancellationCheck.canCancel) {
+            return sendError(res, cancellationCheck.reason, 403);
+        }
+
+        const updatedTrip = await Trip.findByIdAndUpdate(
+            tripId,
+            {
+                status: "cancelled",
+                cancelledAt: new Date(),
+                cancellationReason: reason,
+            },
+            { new: true }
+        );
+
+        // Si había un conductor asignado, marcarlo como disponible
+        if (trip.driverId) {
+            await User.findByIdAndUpdate(trip.driverId, {
+                "driverInfo.isAvailable": true,
+            });
+        }
+
+        sendSuccess(res, updatedTrip, "Viaje cancelado exitosamente");
+    } catch (error) {
+        sendError(res, error);
+    }
+};
 
