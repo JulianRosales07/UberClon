@@ -48,3 +48,21 @@ const validatePaymentMethod = (paymentMethod, paymentDetails) => {
 
   return { isValid: true };
 };
+
+const calculatePlatformFee = (amount, feePercentage = 20) => {
+  const fee = amount * (feePercentage / 100);
+  return Math.round(fee * 100) / 100;
+};
+
+const calculateDriverEarnings = (amount, platformFee) => {
+  const earnings = amount - platformFee;
+  return Math.round(earnings * 100) / 100;
+};
+
+const generateTransactionId = (paymentMethod, paymentId) => {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 6);
+  const method = paymentMethod.substring(0, 4).toUpperCase();
+  
+  return `${method}_${timestamp}_${random}`;
+};
