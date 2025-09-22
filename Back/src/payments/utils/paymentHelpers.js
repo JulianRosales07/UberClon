@@ -91,3 +91,74 @@ const canProcessRefund = (payment) => {
 
   return { canRefund: true };
 };
+
+const simulatePaymentProcessing = async (paymentMethod, amount, paymentDetails) => {
+  // Simulación de procesamiento de pagos
+  // En producción, aquí integrarías con Stripe, PayPal, etc.
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      let successRate;
+      
+      switch (paymentMethod) {
+        case 'cash':
+          successRate = 1.0; // 100% éxito para efectivo
+          break;
+        case 'card':
+          successRate = 0.95; // 95% éxito para tarjetas
+          break;
+        case 'digital_wallet':
+          successRate = 0.98; // 98% éxito para billeteras digitales
+          break;
+        default:
+          successRate = 0.9;
+      }
+
+      const isSuccess = Math.random() < successRate;
+      
+      if (isSuccess) {
+        resolve({
+          success: true,
+          transactionId: generateTransactionId(paymentMethod, Date.now()),
+          processedAt: new Date()
+        });
+      } else {
+        const errors = {
+          card: ['Tarjeta declinada', 'Fondos insuficientes', 'Tarjeta expirada'],
+          digital_wallet: ['Fondos insuficientes', 'Cuenta suspendida', 'Error de conexión']
+        };
+        
+        const errorMessages = errors[paymentMethod] || ['Error de procesamiento'];
+        const randomError = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+        
+        resolve({
+          success: false,
+          error: randomError
+        });
+      }
+    }, 1000 + Math.random() * 2000); // Simular delay de 1-3 segundos
+  });
+};
+
+const simulateRefundProcessing = async (payment) => {
+  // Simulación de procesamiento de reembolsos
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const successRate = payment.paymentMethod === 'cash' ? 1.0 : 0.97;
+      const isSuccess = Math.random() < successRate;
+      
+      if (isSuccess) {
+        resolve({
+          success: true,
+          refundId: generateRefundId(payment.transactionId),
+          processedAt: new Date()
+        });
+      } else {
+        resolve({
+          success: false,
+          error: 'Error al procesar reembolso. Intente nuevamente.'
+        });
+      }
+    }, 500 + Math.random() * 1500); // Delay de 0.5-2 segundos
+  });
+};
