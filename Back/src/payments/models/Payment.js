@@ -123,3 +123,39 @@ paymentSchema.virtual('netDriverEarnings').get(function() {
 paymentSchema.methods.canBeRefunded = function() {
   return this.status === 'completed' && !this.refundedAt;
 };
+
+// Método estático para obtener estadísticas de pagos
+paymentSchema.statics.getPaymentStats = async function(driverId, startDate, endDate) {
+  const stats = await this.aggregate([
+    {
+      $match: {
+        driverId: mongoose.Types.ObjectId(driverId),
+        status: 'completed',
+        processedAt: {
+          $gte: startDate,
+          $lte: endDate
+        }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalAmount: { $sum: '$amount' },
+        totalPlatformFee: { $sum: '$platformFee' },
+        totalDriverEarnings: { $sum: '$driverEarnings' },
+        totalPayments: { $sum: 1 },
+        averageAmount: { $avg: '$amount' }
+      }
+    }
+  ]);
+
+  return stats[0] || {
+    totalAmount: 0,
+    totalPlatformFee: 0,
+    totalDriverEarnings: 0,
+    totalPayments: 0,
+    averageAmount: 0
+  };
+};
+
+module.exports = mongoose.model('Payment', paymentSchema);
