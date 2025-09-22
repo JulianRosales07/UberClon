@@ -110,3 +110,15 @@ const tripSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+// Índices para mejorar performance
+tripSchema.index({ passengerId: 1 });
+tripSchema.index({ driverId: 1 });
+tripSchema.index({ status: 1 });
+tripSchema.index({ createdAt: -1 });
+tripSchema.index({ 'origin.coordinates': '2dsphere' });
+tripSchema.index({ 'destination.coordinates': '2dsphere' });
+
+// Índice compuesto para búsquedas de conductores
+tripSchema.index({ status: 1, createdAt: -1 });
+
+module.exports = mongoose.model('Trip', tripSchema);
