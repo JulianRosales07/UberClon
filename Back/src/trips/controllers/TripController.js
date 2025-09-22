@@ -257,4 +257,41 @@ const cancelTrip = async (req, res) => {
         sendError(res, error);
     }
 };
+const getTripById = async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const userId = req.user.userId;
+
+        const trip = await Trip.findById(tripId)
+            .populate("passengerId", "name phone profileImage")
+            .populate(
+                "driverId",
+                "name phone profileImage driverInfo.rating driverInfo.vehicleId"
+            )
+            .populate({
+                path: "driverId",
+                populate: {
+                    path: "driverInfo.vehicleId",
+                    model: "Vehicle",
+                },
+            });
+
+        if (!trip) {
+            return sendError(res, "Viaje no encontrado", 404);
+        }
+
+        // Verificar que el usuario tiene acceso al viaje
+        const hasAccess =
+            trip.passengerId._id.toString() === userId ||
+            (trip.driverId && trip.driverId._id.toString() === userId);
+
+        if (!hasAccess) {
+            return sendError(res, "No tienes acceso a este viaje", 403);
+        }
+
+        sendSuccess(res, trip, "Viaje obtenido exitosamente");
+    } catch (error) {
+        sendError(res, error);
+    }
+};
 
