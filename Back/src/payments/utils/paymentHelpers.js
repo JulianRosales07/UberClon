@@ -66,3 +66,28 @@ const generateTransactionId = (paymentMethod, paymentId) => {
   
   return `${method}_${timestamp}_${random}`;
 };
+
+const generateRefundId = (originalTransactionId) => {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 4);
+  
+  return `REFUND_${timestamp}_${random}`;
+};
+
+const canProcessRefund = (payment) => {
+  if (payment.status !== 'completed') {
+    return { canRefund: false, reason: 'Solo se pueden reembolsar pagos completados' };
+  }
+
+  if (payment.refundedAt) {
+    return { canRefund: false, reason: 'Este pago ya fue reembolsado' };
+  }
+
+  // Verificar si han pasado más de 30 días
+  const daysSincePayment = (new Date() - new Date(payment.processedAt)) / (1000 * 60 * 60 * 24);
+  if (daysSincePayment > 30) {
+    return { canRefund: false, reason: 'No se pueden reembolsar pagos de más de 30 días' };
+  }
+
+  return { canRefund: true };
+};
