@@ -122,3 +122,38 @@ const getAvailableTrips = async (req, res) => {
         sendError(res, error);
     }
 };
+const acceptTrip = async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const driverId = req.user.userId;
+
+        // Verificar que el conductor esté disponible
+        const driver = await User.findById(driverId);
+        if (!driver.driverInfo.isAvailable) {
+            return sendError(res, "El conductor no está disponible", 400);
+        }
+
+        const trip = await Trip.findOneAndUpdate(
+            { _id: tripId, status: "pending" },
+            {
+                driverId,
+                status: "accepted",
+                acceptedAt: new Date(),
+            },
+            { new: true }
+        ).populate("passengerId", "name phone profileImage");
+
+        if (!trip) {
+            return sendError(res, "Viaje no encontrado o ya fue aceptado", 404);
+        }
+
+        // Marcar conductor como no disponible
+        await User.findByIdAndUpdate(driverId, {
+            "driverInfo.isAvailable": false,
+        });
+
+        sendSuccess(res, trip, "Viaje aceptado exitosamente");
+    } catch (error) {
+        sendError(res, error);
+    }
+};
