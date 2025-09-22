@@ -93,3 +93,33 @@ const paymentSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Índices
+paymentSchema.index({ passengerId: 1 });
+paymentSchema.index({ driverId: 1 });
+paymentSchema.index({ status: 1 });
+paymentSchema.index({ createdAt: -1 });
+
+// Índice compuesto para consultas de historial
+paymentSchema.index({ passengerId: 1, createdAt: -1 });
+paymentSchema.index({ driverId: 1, createdAt: -1 });
+
+// Middleware pre-save para calcular comisiones
+paymentSchema.pre('save', function(next) {
+  if (this.isModified('amount') && this.status === 'completed') {
+    // Calcular comisión de la plataforma (20%)
+    this.platformFee = this.amount * 0.20;
+    this.driverEarnings = this.amount - this.platformFee;
+  }
+  next();
+});
+
+// Método virtual para obtener el monto neto del conductor
+paymentSchema.virtual('netDriverEarnings').get(function() {
+  return this.amount - this.platformFee;
+});
+
+// Método para verificar si el pago puede ser reembolsado
+paymentSchema.methods.canBeRefunded = function() {
+  return this.status === 'completed' && !this.refundedAt;
+};
