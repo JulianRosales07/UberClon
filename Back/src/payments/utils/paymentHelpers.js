@@ -178,3 +178,56 @@ const formatPaymentForResponse = (payment) => {
     } : paymentObject.paymentDetails
   };
 };
+
+const getPaymentSummary = (payments) => {
+  const summary = {
+    totalAmount: 0,
+    totalFees: 0,
+    totalEarnings: 0,
+    paymentCount: payments.length,
+    byMethod: {
+      cash: { count: 0, amount: 0 },
+      card: { count: 0, amount: 0 },
+      digital_wallet: { count: 0, amount: 0 }
+    },
+    byStatus: {
+      completed: { count: 0, amount: 0 },
+      pending: { count: 0, amount: 0 },
+      failed: { count: 0, amount: 0 },
+      refunded: { count: 0, amount: 0 }
+    }
+  };
+
+  payments.forEach(payment => {
+    summary.totalAmount += payment.amount;
+    summary.totalFees += payment.platformFee || 0;
+    summary.totalEarnings += payment.driverEarnings || 0;
+
+    // Por método
+    if (summary.byMethod[payment.paymentMethod]) {
+      summary.byMethod[payment.paymentMethod].count++;
+      summary.byMethod[payment.paymentMethod].amount += payment.amount;
+    }
+
+    // Por estado
+    if (summary.byStatus[payment.status]) {
+      summary.byStatus[payment.status].count++;
+      summary.byStatus[payment.status].amount += payment.amount;
+    }
+  });
+
+  // Redondear valores
+  summary.totalAmount = Math.round(summary.totalAmount * 100) / 100;
+  summary.totalFees = Math.round(summary.totalFees * 100) / 100;
+  summary.totalEarnings = Math.round(summary.totalEarnings * 100) / 100;
+
+  Object.keys(summary.byMethod).forEach(method => {
+    summary.byMethod[method].amount = Math.round(summary.byMethod[method].amount * 100) / 100;
+  });
+
+  Object.keys(summary.byStatus).forEach(status => {
+    summary.byStatus[status].amount = Math.round(summary.byStatus[status].amount * 100) / 100;
+  });
+
+  return summary;
+};
