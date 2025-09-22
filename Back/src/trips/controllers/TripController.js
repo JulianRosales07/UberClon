@@ -50,3 +50,46 @@ const createTripRequest = async (req, res) => {
     }
 };
 
+const getTripsByPassenger = async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const query = { passengerId: req.user.userId };
+
+        if (status) {
+            query.status = status;
+        }
+
+        const trips = await Trip.find(query)
+            .populate(
+                "driverId",
+                "name phone profileImage driverInfo.rating driverInfo.vehicleId"
+            )
+            .populate({
+                path: "driverId",
+                populate: {
+                    path: "driverInfo.vehicleId",
+                    model: "Vehicle",
+                },
+            })
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await Trip.countDocuments(query);
+
+        sendSuccess(
+            res,
+            {
+                trips,
+                pagination: {
+                    current: page,
+                    pages: Math.ceil(total / limit),
+                    total,
+                },
+            },
+            "Viajes obtenidos exitosamente"
+        );
+    } catch (error) {
+        sendError(res, error);
+    }
+};
