@@ -157,3 +157,26 @@ const acceptTrip = async (req, res) => {
         sendError(res, error);
     }
 };
+const startTrip = async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const driverId = req.user.userId;
+
+        const trip = await Trip.findOneAndUpdate(
+            { _id: tripId, driverId, status: "accepted" },
+            {
+                status: "in_progress",
+                startedAt: new Date(),
+            },
+            { new: true }
+        ).populate("passengerId", "name phone profileImage");
+
+        if (!trip) {
+            return sendError(res, "Viaje no encontrado o no puede ser iniciado", 404);
+        }
+
+        sendSuccess(res, trip, "Viaje iniciado exitosamente");
+    } catch (error) {
+        sendError(res, error);
+    }
+};
