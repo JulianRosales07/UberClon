@@ -93,3 +93,32 @@ const getTripsByPassenger = async (req, res) => {
         sendError(res, error);
     }
 };
+const getAvailableTrips = async (req, res) => {
+    try {
+        const { lat, lng, radius = 10 } = req.query; // radius en km
+
+        let query = { status: "pending" };
+
+        // Si se proporcionan coordenadas, filtrar por proximidad
+        if (lat && lng) {
+            query["origin.coordinates"] = {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [parseFloat(lng), parseFloat(lat)],
+                    },
+                    $maxDistance: radius * 1000, // convertir km a metros
+                },
+            };
+        }
+
+        const trips = await Trip.find(query)
+            .populate("passengerId", "name phone profileImage")
+            .sort({ createdAt: -1 })
+            .limit(20);
+
+        sendSuccess(res, trips, "Viajes disponibles obtenidos exitosamente");
+    } catch (error) {
+        sendError(res, error);
+    }
+};
