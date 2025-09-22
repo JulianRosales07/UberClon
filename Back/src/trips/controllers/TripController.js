@@ -180,3 +180,42 @@ const startTrip = async (req, res) => {
         sendError(res, error);
     }
 };
+const completeTrip = async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const driverId = req.user.userId;
+        const { finalPrice } = req.body;
+
+        const trip = await Trip.findOneAndUpdate(
+            { _id: tripId, driverId, status: "in_progress" },
+            {
+                status: "completed",
+                completedAt: new Date(),
+                finalPrice: finalPrice || trip.estimatedPrice,
+            },
+            { new: true }
+        ).populate("passengerId", "name phone profileImage");
+
+        if (!trip) {
+            return sendError(
+                res,
+                "Viaje no encontrado o no puede ser completado",
+                404
+            );
+        }
+
+        // Actualizar estadísticas del conductor
+        await User.findByIdAndUpdate(driverId, {
+            $inc: {
+                "driverInfo.totalTrips": 1,
+                "driverInfo.totalEarnings": trip.finalPrice,
+            },
+            "driverInfo.isAvailable": true,
+        });
+
+        sendSuccess(res, trip, "Viaje completado exitosamente");
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
