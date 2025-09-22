@@ -162,3 +162,19 @@ const simulateRefundProcessing = async (payment) => {
     }, 500 + Math.random() * 1500); // Delay de 0.5-2 segundos
   });
 };
+
+const formatPaymentForResponse = (payment) => {
+  const paymentObject = payment.toObject ? payment.toObject() : payment;
+  
+  return {
+    ...paymentObject,
+    amount: Math.round(paymentObject.amount * 100) / 100,
+    platformFee: Math.round(paymentObject.platformFee * 100) / 100,
+    driverEarnings: Math.round(paymentObject.driverEarnings * 100) / 100,
+    // Ocultar información sensible de tarjetas
+    paymentDetails: paymentObject.paymentMethod === 'card' ? {
+      cardLast4: paymentObject.paymentDetails?.cardLast4,
+      cardBrand: paymentObject.paymentDetails?.cardBrand
+    } : paymentObject.paymentDetails
+  };
+};
