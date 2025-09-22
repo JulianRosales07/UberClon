@@ -231,3 +231,17 @@ const getPaymentSummary = (payments) => {
 
   return summary;
 };
+
+module.exports = {
+  validatePaymentAmount,
+  validatePaymentMethod,
+  calculatePlatformFee,
+  calculateDriverEarnings,
+  generateTransactionId,
+  generateRefundId,
+  canProcessRefund,
+  simulatePaymentProcessing,
+  simulateRefundProcessing,
+  formatPaymentForResponse,
+  getPaymentSummary
+};
