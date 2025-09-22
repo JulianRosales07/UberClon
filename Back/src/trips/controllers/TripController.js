@@ -294,4 +294,15 @@ const getTripById = async (req, res) => {
         sendError(res, error);
     }
 };
+module.exports = {
+    createTripRequest,
+    getTripsByPassenger,
+    getAvailableTrips,
+    acceptTrip,
+    startTrip,
+    completeTrip,
+    cancelTrip,
+    getTripById,
+};
+
 
