@@ -45,26 +45,70 @@ Una aplicación completa de transporte tipo Uber desarrollada con React (Fronten
 
 ### Prerrequisitos
 - Node.js 18+
-- MongoDB
-- pnpm (recomendado) o npm
+- npm o pnpm
 
-### Backend
+### 🚀 Inicio Rápido (Recomendado)
+
+#### Windows CMD:
+```cmd
+start-dev.bat
+```
+
+#### Windows PowerShell:
+```powershell
+.\start-dev.ps1
+```
+
+### 🔧 Instalación Manual
+
+#### Backend
 ```bash
 cd Back
 npm install
-cp .env.example .env
-# Configurar variables de entorno
-npm start
+# El archivo .env ya está configurado
+npm run dev
 ```
 
-### Frontend
+#### Frontend
 ```bash
 cd Front/UberClon
-pnpm install
-pnpm run dev
+npm install
+# El archivo .env ya está configurado
+npm run dev
 ```
 
+### 🌐 URLs de Desarrollo
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:3001
+- **API Docs**: http://localhost:3001/api/info
+
 ## 🌟 Últimas Actualizaciones
+
+### ✨ **NUEVA FUNCIONALIDAD: Frontend y Backend Conectados con API de Geolocalización**
+
+#### 🔗 **Integración Completa Frontend-Backend**
+- ✅ **API Service configurado** con axios y interceptores
+- ✅ **Conexión automática** entre React y Express
+- ✅ **Variables de entorno** configuradas (.env)
+- ✅ **CORS habilitado** para comunicación cross-origin
+
+#### 🌍 **API de Geolocalización Real**
+- ✅ **Nominatim API** integrada (OpenStreetMap)
+- ✅ **Búsqueda en tiempo real** de ubicaciones
+- ✅ **Geocodificación inversa** (coordenadas → dirección)
+- ✅ **Cálculo de distancias** usando fórmula de Haversine
+- ✅ **Estimación automática** de tarifas y tiempos
+
+#### 🔍 **Buscador Mejorado**
+- ✅ **Autocompletado inteligente** con debounce (300ms)
+- ✅ **Resultados de API externa** + fallback local
+- ✅ **Indicadores de carga** durante búsquedas
+- ✅ **Manejo de errores** con mensajes informativos
+
+#### 🚀 **Scripts de Desarrollo**
+- ✅ **start-dev.bat** - Para Windows CMD
+- ✅ **start-dev.ps1** - Para PowerShell
+- ✅ **Inicio automático** de frontend y backend
 
 ### Commit: "feat: Configuración completa para Pasto, Nariño y optimización de UI"
 

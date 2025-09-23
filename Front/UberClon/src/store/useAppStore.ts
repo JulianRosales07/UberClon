@@ -51,6 +51,18 @@ interface Driver extends User {
   totalTrips: number;
 }
 
+interface MusicRequest {
+  id: string;
+  song: string;
+  artist?: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'declined' | 'playing';
+  timestamp: Date;
+  tripId: string;
+  passengerId: string;
+  driverId: string;
+}
+
 interface AppState {
   // User state
   user: User | null;
@@ -65,6 +77,10 @@ interface AppState {
   currentTrip: Trip | null;
   rideRequest: RideRequest | null;
   nearbyDrivers: Driver[];
+  
+  // Music state
+  musicRequests: MusicRequest[];
+  currentlyPlaying: MusicRequest | null;
   
   // UI state
   isLoading: boolean;
@@ -84,6 +100,12 @@ interface AppState {
   clearError: () => void;
   logout: () => void;
   setShowLogin: (type: 'passenger' | 'driver' | null) => void;
+  
+  // Music actions
+  addMusicRequest: (request: Omit<MusicRequest, 'id' | 'timestamp'>) => void;
+  updateMusicRequestStatus: (id: string, status: MusicRequest['status']) => void;
+  setCurrentlyPlaying: (request: MusicRequest | null) => void;
+  clearMusicRequests: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -96,6 +118,8 @@ export const useAppStore = create<AppState>((set) => ({
   currentTrip: null,
   rideRequest: null,
   nearbyDrivers: [],
+  musicRequests: [],
+  currentlyPlaying: null,
   isLoading: false,
   error: null,
   showLogin: null,
@@ -118,7 +142,33 @@ export const useAppStore = create<AppState>((set) => ({
     rideRequest: null,
     pickupLocation: null,
     destinationLocation: null,
+    musicRequests: [],
+    currentlyPlaying: null,
     showLogin: null
   }),
   setShowLogin: (type) => set({ showLogin: type }),
+  
+  // Music actions
+  addMusicRequest: (request) => set((state) => ({
+    musicRequests: [...state.musicRequests, {
+      ...request,
+      id: Date.now().toString(),
+      timestamp: new Date()
+    }]
+  })),
+  
+  updateMusicRequestStatus: (id, status) => set((state) => ({
+    musicRequests: state.musicRequests.map(req => 
+      req.id === id ? { ...req, status } : req
+    ),
+    currentlyPlaying: status === 'playing' 
+      ? state.musicRequests.find(req => req.id === id) || null
+      : state.currentlyPlaying?.id === id 
+        ? null 
+        : state.currentlyPlaying
+  })),
+  
+  setCurrentlyPlaying: (request) => set({ currentlyPlaying: request }),
+  
+  clearMusicRequests: () => set({ musicRequests: [], currentlyPlaying: null }),
 }));

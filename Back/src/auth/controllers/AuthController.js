@@ -7,7 +7,7 @@ const {
   sanitizeUser,
   validateEmail,
   validatePassword 
-} = require('../../../utils/authHelpers');
+} = require('../../shared/utils/authHelpers');
 
 const register = async (req, res) => {
     try{

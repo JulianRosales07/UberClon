@@ -1,6 +1,8 @@
-import React from 'react';
-import { Car, Users, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Car, Users, Zap, Loader2 } from 'lucide-react';
 import { Button } from '../common/Button';
+// Usar API directamente
+import { useAppStore } from '../../store/useAppStore';
 
 interface RideOption {
   id: string;
@@ -13,10 +15,52 @@ interface RideOption {
 
 interface RideOptionsProps {
   onSelectRide: (option: RideOption) => void;
-  distance: number;
+  distance?: number;
 }
 
-export const RideOptions: React.FC<RideOptionsProps> = ({ onSelectRide, distance }) => {
+export const RideOptions: React.FC<RideOptionsProps> = ({ onSelectRide, distance: propDistance }) => {
+  const { pickupLocation, destinationLocation } = useAppStore();
+  const [distance, setDistance] = useState<number>(propDistance || 0);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [calculationError, setCalculationError] = useState<string | null>(null);
+
+  // Calcular distancia real cuando se monta el componente
+  useEffect(() => {
+    if (pickupLocation && destinationLocation && !propDistance) {
+      setIsCalculating(true);
+      setCalculationError(null);
+      
+      // Usar API real para calcular distancia
+      fetch(`${import.meta.env.VITE_API_URL}/locations-test/distance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: { lat: pickupLocation.lat, lon: pickupLocation.lng },
+          to: { lat: destinationLocation.lat, lon: destinationLocation.lng }
+        })
+      })
+        .then(response => response.json())
+        .then((data) => {
+          if (data.success) {
+            setDistance(data.data.distance);
+          } else {
+            throw new Error('Error en respuesta de API');
+          }
+        })
+        .catch((error) => {
+          console.error('Error calculando distancia:', error);
+          setCalculationError('Error calculando distancia');
+          // Fallback a estimación básica
+          setDistance(5);
+        })
+        .finally(() => {
+          setIsCalculating(false);
+        });
+    }
+  }, [pickupLocation, destinationLocation, propDistance]);
+
   const rideOptions: RideOption[] = [
     {
       id: 'uberx',
@@ -44,9 +88,34 @@ export const RideOptions: React.FC<RideOptionsProps> = ({ onSelectRide, distance
     }
   ];
 
+  if (isCalculating) {
+    return (
+      <div className="bg-white rounded-t-3xl p-6 shadow-lg">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400 mr-2" />
+          <span className="text-gray-500">Calculando opciones de viaje...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-t-3xl p-6 shadow-lg">
-      <h3 className="text-xl font-bold mb-4">Elige tu viaje</h3>
+    <div className="bg-white rounded-t-3xl shadow-lg max-h-[70vh] overflow-y-auto">
+      {/* Header */}
+      <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 rounded-t-3xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Elige tu viaje</h3>
+          <div className="text-sm text-gray-500">
+            {distance > 0 && `${distance.toFixed(1)} km`}
+            {calculationError && (
+              <span className="text-red-500 text-xs">⚠️ Estimado</span>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="p-6">
       
       <div className="space-y-3">
         {rideOptions.map((option) => (
@@ -73,13 +142,15 @@ export const RideOptions: React.FC<RideOptionsProps> = ({ onSelectRide, distance
         ))}
       </div>
       
-      <div className="mt-6">
-        <Button 
-          className="w-full"
-          onClick={() => onSelectRide(rideOptions[0])}
-        >
-          Confirmar UberX
-        </Button>
+        <div className="mt-6">
+          <Button 
+            className="w-full"
+            onClick={() => onSelectRide(rideOptions[0])}
+            disabled={isCalculating}
+          >
+            Confirmar UberX
+          </Button>
+        </div>
       </div>
     </div>
   );

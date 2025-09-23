@@ -5,9 +5,12 @@ import { TripStatus } from './TripStatus';
 import { DriverFound } from './DriverFound';
 import { SearchScreen } from './SearchScreen';
 import { HomeScreen } from './HomeScreen';
+import { InTripView } from './InTripView';
+import { PaymentView } from './PaymentView';
 import { useAppStore } from '../../store/useAppStore';
 import { getNearbyDrivers, requestRide } from '../../services/rideService';
-import { MapPin, Navigation, X, ArrowLeft, UserCheck } from 'lucide-react';
+// Importar funciones de geolocalización
+import { MapPin, Navigation, X, ArrowLeft, UserCheck, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '../common/Button';
 
 interface Location {
@@ -45,25 +48,112 @@ export const PassengerHome: React.FC = () => {
   const [showRideOptions, setShowRideOptions] = useState(false);
   const [showSearchScreen, setShowSearchScreen] = useState(false);
   const [showHomeScreen, setShowHomeScreen] = useState(true);
+  const [showInTrip, setShowInTrip] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [bottomPanelExpanded, setBottomPanelExpanded] = useState(false);
 
   useEffect(() => {
-    // Siempre usar ubicación de Pasto como ubicación actual
+    // Obtener ubicación actual usando geolocalización del navegador
     if (!currentLocation) {
-      const pastoLocation: Location = {
-        lat: 1.223789,
-        lng: -77.283255,
-        address: ' Tu ubicacion, Pasto'
-      };
-      setCurrentLocation(pastoLocation);
-      setPickupLocation(pastoLocation);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              // Intentar geocodificación inversa con la API
+              const response = await fetch(`${import.meta.env.VITE_API_URL}/locations-test/details/${position.coords.latitude}/${position.coords.longitude}`);
+              const data = await response.json();
+              
+              const location: Location = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                address: data.success ? data.data.display_name : 'Tu ubicación actual'
+              };
+              
+              setCurrentLocation(location);
+              setPickupLocation(location);
+            } catch (error) {
+              console.error('Error en geocodificación inversa:', error);
+              // Usar coordenadas sin dirección
+              const location: Location = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                address: 'Tu ubicación actual'
+              };
+              setCurrentLocation(location);
+              setPickupLocation(location);
+            }
+          },
+          (error) => {
+            console.warn('Error obteniendo ubicación:', error);
+            // Fallback a Pasto
+            const pastoLocation: Location = {
+              lat: 1.223789,
+              lng: -77.283255,
+              address: 'Centro de Pasto, Nariño'
+            };
+            setCurrentLocation(pastoLocation);
+            setPickupLocation(pastoLocation);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+          }
+        );
+      } else {
+        // Fallback a Pasto si no hay geolocalización
+        const pastoLocation: Location = {
+          lat: 1.223789,
+          lng: -77.283255,
+          address: 'Centro de Pasto, Nariño'
+        };
+        setCurrentLocation(pastoLocation);
+        setPickupLocation(pastoLocation);
+      }
     }
   }, [currentLocation, setCurrentLocation, setPickupLocation]);
 
-  const handleLocationSelect = (pickup: Location, destination: Location) => {
-    setPickupLocation(pickup);
-    setDestinationLocation(destination);
+  const handleLocationSelect = async (pickup: Location, destination: Location) => {
+    // Si el pickup no tiene coordenadas precisas, intentar geocodificar
+    let finalPickup = pickup;
+    let finalDestination = destination;
+
+    try {
+      // Si el pickup es solo texto, buscar coordenadas
+      if (!pickup.lat || pickup.lat === 1.223789) {
+        const pickupResponse = await fetch(`${import.meta.env.VITE_API_URL}/locations-test/search?query=${encodeURIComponent(pickup.address || '')}&limit=1`);
+        const pickupData = await pickupResponse.json();
+        
+        if (pickupData.success && pickupData.data.length > 0) {
+          finalPickup = {
+            lat: pickupData.data[0].lat,
+            lng: pickupData.data[0].lon,
+            address: pickupData.data[0].display_name
+          };
+        }
+      }
+
+      // Si el destino necesita coordenadas más precisas
+      if (destination.address && (!destination.lat || !destination.lng)) {
+        const destResponse = await fetch(`${import.meta.env.VITE_API_URL}/locations-test/search?query=${encodeURIComponent(destination.address)}&limit=1`);
+        const destData = await destResponse.json();
+        
+        if (destData.success && destData.data.length > 0) {
+          finalDestination = {
+            lat: destData.data[0].lat,
+            lng: destData.data[0].lon,
+            address: destData.data[0].display_name
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error geocodificando ubicaciones:', error);
+    }
+
+    setPickupLocation(finalPickup);
+    setDestinationLocation(finalDestination);
     setShowSearchScreen(false);
-    setShowHomeScreen(false); // Ir al mapa después de seleccionar ubicaciones
+    setShowHomeScreen(false);
     setShowRideOptions(true);
   };
 
@@ -102,24 +192,52 @@ export const PassengerHome: React.FC = () => {
 
   const handleRideSelect = async (option: any) => {
     if (pickupLocation && destinationLocation) {
-      const request: RideRequest = {
-        pickup: pickupLocation,
-        destination: destinationLocation,
-        estimatedFare: option.price,
-        estimatedTime: option.estimatedTime,
-        distance: 5 // Simulado
-      };
-      setRideRequest(request);
-      setShowRideOptions(false);
-
       try {
-        // Simular búsqueda y asignación de conductor
-        const trip = await requestRide(pickupLocation, destinationLocation, option.price);
-        setCurrentTrip(trip);
-        setRideRequest(null);
+        // Calcular distancia real usando la API
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/locations-test/distance`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: { lat: pickupLocation.lat, lon: pickupLocation.lng },
+            to: { lat: destinationLocation.lat, lon: destinationLocation.lng }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const distance = data.data.distance;
+          const request: RideRequest = {
+            pickup: pickupLocation,
+            destination: destinationLocation,
+            estimatedFare: Math.ceil(distance * 2500 + 3000), // $2500 por km + tarifa base
+            estimatedTime: Math.ceil(distance * 2 + 5), // 2 min por km + tiempo base
+            distance: distance
+          };
+          setRideRequest(request);
+          setShowRideOptions(false);
+
+          // Simular búsqueda y asignación de conductor
+          const trip = await requestRide(pickupLocation, destinationLocation, request.estimatedFare);
+          setCurrentTrip(trip);
+          setRideRequest(null);
+        } else {
+          throw new Error('Error calculando distancia');
+        }
       } catch (error) {
         console.error('Error al solicitar viaje:', error);
-        setRideRequest(null);
+        // Fallback con datos estimados
+        const request: RideRequest = {
+          pickup: pickupLocation,
+          destination: destinationLocation,
+          estimatedFare: option.price,
+          estimatedTime: option.estimatedTime,
+          distance: 5
+        };
+        setRideRequest(request);
+        setShowRideOptions(false);
       }
     }
   };
@@ -127,6 +245,29 @@ export const PassengerHome: React.FC = () => {
   const handleCancelRequest = () => {
     setRideRequest(null);
     setShowRideOptions(false);
+  };
+
+  const handleTripStart = () => {
+    if (currentTrip) {
+      setCurrentTrip({ ...currentTrip, status: 'in_progress' });
+      setShowInTrip(true);
+    }
+  };
+
+  const handleTripComplete = () => {
+    if (currentTrip) {
+      setCurrentTrip({ ...currentTrip, status: 'completed' });
+      setShowInTrip(false);
+      setShowPayment(true);
+    }
+  };
+
+  const handlePaymentComplete = () => {
+    setShowPayment(false);
+    setCurrentTrip(null);
+    setPickupLocation(null);
+    setDestinationLocation(null);
+    setShowHomeScreen(true);
   };
 
   const handleDriverLogin = () => {
@@ -171,6 +312,26 @@ export const PassengerHome: React.FC = () => {
     );
   }
 
+  // Mostrar vista de pago
+  if (showPayment && currentTrip) {
+    return (
+      <PaymentView
+        trip={currentTrip}
+        onPaymentComplete={handlePaymentComplete}
+      />
+    );
+  }
+
+  // Mostrar vista en viaje
+  if (showInTrip && currentTrip) {
+    return (
+      <InTripView
+        trip={currentTrip}
+        onTripComplete={handleTripComplete}
+      />
+    );
+  }
+
   if (currentTrip) {
     // Si el viaje fue recién aceptado, mostrar información del conductor
     if (currentTrip.status === 'accepted') {
@@ -202,6 +363,7 @@ export const PassengerHome: React.FC = () => {
               setCurrentTrip(null);
               setRideRequest(null);
             }}
+            onTripStart={handleTripStart}
           />
         </div>
       );
@@ -294,31 +456,90 @@ export const PassengerHome: React.FC = () => {
         />
       </div>
 
-      <div className="bg-white p-6 space-y-4">
-        <h2 className="text-2xl font-bold">¿A dónde vamos?</h2>
-
-        <button
-          onClick={() => setShowSearchScreen(true)}
-          className="w-full flex items-center bg-gray-100 rounded-lg px-4 py-3 text-left"
-        >
-          <div className="w-3 h-3 bg-black rounded-full mr-3"></div>
-          <div className="flex-1">
-            <div className="text-gray-900 font-medium">
-              {pickupLocation?.address || 'Tu ubicación actual'}
+      {/* Collapsible Bottom Panel */}
+      <div className={`bg-white transition-all duration-300 ease-in-out ${
+        bottomPanelExpanded ? 'h-auto' : 'h-24'
+      }`}>
+        {/* Panel Header - Always Visible */}
+        <div className="px-6 py-4">
+          <button
+            onClick={() => setBottomPanelExpanded(!bottomPanelExpanded)}
+            className="w-full flex items-center justify-between"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-black rounded-full"></div>
+              <div className="text-left">
+                <h2 className="text-lg font-bold text-gray-900">¿A dónde vamos?</h2>
+                {(pickupLocation || destinationLocation) && (
+                  <p className="text-sm text-gray-500">
+                    {pickupLocation?.address && destinationLocation?.address 
+                      ? 'Ruta seleccionada' 
+                      : 'Toca para seleccionar ruta'
+                    }
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="text-blue-500 mt-1">
-              {destinationLocation?.address || '¿A dónde vas?'}
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-5 h-5 text-gray-400" />
+              {bottomPanelExpanded ? (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              )}
+            </div>
+          </button>
+        </div>
+
+        {/* Expandable Content */}
+        <div className={`overflow-hidden transition-all duration-300 ${
+          bottomPanelExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+        }`}>
+          <div className="px-6 pb-6">
+            <button
+              onClick={() => setShowSearchScreen(true)}
+              className="w-full flex items-center bg-gray-100 rounded-lg px-4 py-3 text-left mb-4"
+            >
+              <div className="w-3 h-3 bg-black rounded-full mr-3"></div>
+              <div className="flex-1">
+                <div className="text-gray-900 font-medium">
+                  {pickupLocation?.address || 'Tu ubicación actual'}
+                </div>
+                <div className="text-blue-500 mt-1">
+                  {destinationLocation?.address || '¿A dónde vas?'}
+                </div>
+              </div>
+              <MapPin className="w-5 h-5 text-gray-400" />
+            </button>
+            
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setShowSearchScreen(true)}
+                className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-left hover:bg-blue-100 transition-colors"
+              >
+                <div className="text-blue-600 font-medium text-sm">🏠 Casa</div>
+                <div className="text-blue-500 text-xs">Agregar dirección</div>
+              </button>
+              <button 
+                onClick={() => setShowSearchScreen(true)}
+                className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-left hover:bg-purple-100 transition-colors"
+              >
+                <div className="text-purple-600 font-medium text-sm">💼 Trabajo</div>
+                <div className="text-purple-500 text-xs">Agregar dirección</div>
+              </button>
             </div>
           </div>
-          <MapPin className="w-5 h-5 text-gray-400" />
-        </button>
+        </div>
       </div>
 
       {showRideOptions && pickupLocation && destinationLocation && (
-        <RideOptions
-          onSelectRide={handleRideSelect}
-          distance={5} // Simulado
-        />
+        <div className="absolute bottom-0 left-0 right-0">
+          <RideOptions
+            onSelectRide={handleRideSelect}
+            distance={5} // Simulado
+          />
+        </div>
       )}
     </div>
   );

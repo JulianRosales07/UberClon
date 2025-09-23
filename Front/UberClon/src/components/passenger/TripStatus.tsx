@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Map } from '../common/Map';
 import { Button } from '../common/Button';
-import { Phone, MessageCircle, Star, User, ArrowLeft } from 'lucide-react';
+import { Phone, MessageCircle, Star, User, ArrowLeft, Music } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { MusicRequest } from './MusicRequest';
+import { MusicRequestStatus } from './MusicRequestStatus';
+import type { MusicRequestData } from '../../types/music';
 
 interface Location {
   lat: number;
@@ -30,11 +33,46 @@ interface TripStatusProps {
 
 export const TripStatus: React.FC<TripStatusProps> = ({ trip }) => {
   const { setCurrentTrip } = useAppStore();
+  const [showMusicRequest, setShowMusicRequest] = useState(false);
+  const [musicRequests, setMusicRequests] = useState<MusicRequestData[]>([]);
 
   const handleBack = () => {
     if (trip.status === 'completed') {
       setCurrentTrip(null);
     }
+  };
+
+  const handleMusicRequest = (song: string, artist?: string, message?: string) => {
+    const newRequest: MusicRequestData = {
+      id: Date.now().toString(),
+      song,
+      artist,
+      message,
+      status: 'pending',
+      timestamp: new Date()
+    };
+
+    setMusicRequests(prev => [...prev, newRequest]);
+
+    // Simular respuesta del conductor después de unos segundos
+    setTimeout(() => {
+      const responses = ['accepted', 'declined', 'playing'] as const;
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      
+      setMusicRequests(prev => 
+        prev.map(req => 
+          req.id === newRequest.id 
+            ? { ...req, status: randomResponse }
+            : req.status === 'playing' 
+              ? { ...req, status: 'accepted' } // Solo una canción puede estar sonando
+              : req
+        )
+      );
+    }, 2000 + Math.random() * 3000); // Entre 2-5 segundos
+  };
+
+  const handleRetryMusicRequest = (requestId: string) => {
+    setShowMusicRequest(true);
   };
 
   const getStatusMessage = () => {
@@ -101,6 +139,14 @@ export const TripStatus: React.FC<TripStatusProps> = ({ trip }) => {
           </p>
         </div>
 
+        {/* Solicitudes de Música */}
+        {(trip.status === 'accepted' || trip.status === 'in_progress') && (
+          <MusicRequestStatus 
+            requests={musicRequests}
+            onRetry={handleRetryMusicRequest}
+          />
+        )}
+
         {trip.status === 'accepted' || trip.status === 'in_progress' ? (
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex items-center space-x-4">
@@ -129,6 +175,14 @@ export const TripStatus: React.FC<TripStatusProps> = ({ trip }) => {
                 <Button size="sm" variant="secondary" title="Mensaje">
                   <MessageCircle className="w-4 h-4" />
                 </Button>
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  title="Solicitar música"
+                  onClick={() => setShowMusicRequest(true)}
+                >
+                  <Music className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -155,13 +209,29 @@ export const TripStatus: React.FC<TripStatusProps> = ({ trip }) => {
         )}
 
         {(trip.status === 'accepted' || trip.status === 'in_progress') && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-3">
+            <Button 
+              variant="secondary" 
+              className="w-full flex items-center justify-center space-x-2"
+              onClick={() => setShowMusicRequest(true)}
+            >
+              <Music className="w-4 h-4" />
+              <span>Solicitar Música</span>
+            </Button>
+            
             <Button variant="danger" className="w-full">
               Cancelar viaje
             </Button>
           </div>
         )}
       </div>
+
+      {/* Modal de Solicitud de Música */}
+      <MusicRequest
+        isVisible={showMusicRequest}
+        onClose={() => setShowMusicRequest(false)}
+        onSendRequest={handleMusicRequest}
+      />
     </div>
   );
 };

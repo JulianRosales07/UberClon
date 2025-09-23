@@ -19,21 +19,39 @@ interface DriverFoundProps {
   driver: Driver;
   estimatedArrival: number;
   onCancel: () => void;
+  onTripStart?: () => void;
 }
 
 export const DriverFound: React.FC<DriverFoundProps> = ({
   driver,
   estimatedArrival,
-  onCancel
+  onCancel,
+  onTripStart
 }) => {
   const [timeLeft, setTimeLeft] = useState(estimatedArrival);
+  const [driverArrived, setDriverArrived] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => Math.max(0, prev - 1));
+      setTimeLeft(prev => {
+        const newTime = Math.max(0, prev - 1);
+        if (newTime === 0) {
+          setDriverArrived(true);
+        }
+        return newTime;
+      });
     }, 60000); // Actualizar cada minuto
 
-    return () => clearInterval(timer);
+    // Simular llegada del conductor después de un tiempo
+    const arrivalTimer = setTimeout(() => {
+      setDriverArrived(true);
+      setTimeLeft(0);
+    }, 5000); // 5 segundos para demo
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(arrivalTimer);
+    };
   }, []);
 
   return (
@@ -69,14 +87,25 @@ export const DriverFound: React.FC<DriverFoundProps> = ({
         </div>
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-3 mb-4 text-center">
-        <p className="text-blue-800 font-semibold text-sm">
-          Llegará en {timeLeft} minutos
-        </p>
-        <p className="text-blue-600 text-xs">
-          Te notificaremos cuando esté cerca
-        </p>
-      </div>
+      {!driverArrived ? (
+        <div className="bg-blue-50 rounded-lg p-3 mb-4 text-center">
+          <p className="text-blue-800 font-semibold text-sm">
+            Llegará en {timeLeft} minutos
+          </p>
+          <p className="text-blue-600 text-xs">
+            Te notificaremos cuando esté cerca
+          </p>
+        </div>
+      ) : (
+        <div className="bg-green-50 rounded-lg p-3 mb-4 text-center">
+          <p className="text-green-800 font-semibold text-sm">
+            🚗 ¡Tu conductor ha llegado!
+          </p>
+          <p className="text-green-600 text-xs">
+            Busca el vehículo {driver.vehicleInfo.licensePlate}
+          </p>
+        </div>
+      )}
 
       <div className="flex space-x-2 mb-3">
         <Button className="flex-1 flex items-center justify-center space-x-2 py-2">
@@ -89,19 +118,38 @@ export const DriverFound: React.FC<DriverFoundProps> = ({
         </Button>
       </div>
 
-      <Button 
-        variant="danger" 
-        className="w-full py-2"
-        onClick={onCancel}
-      >
-        <span className="text-sm">Cancelar viaje</span>
-      </Button>
-
-      <div className="mt-2 text-center">
-        <p className="text-xs text-gray-500">
-          Cancelación gratuita hasta que llegue tu conductor
-        </p>
-      </div>
+      {driverArrived && onTripStart ? (
+        <div className="space-y-2">
+          <Button 
+            className="w-full py-3 bg-green-600 hover:bg-green-700"
+            onClick={onTripStart}
+          >
+            <span className="text-sm font-semibold">🚀 Iniciar Viaje</span>
+          </Button>
+          <Button 
+            variant="danger" 
+            className="w-full py-2"
+            onClick={onCancel}
+          >
+            <span className="text-sm">Cancelar viaje</span>
+          </Button>
+        </div>
+      ) : (
+        <>
+          <Button 
+            variant="danger" 
+            className="w-full py-2"
+            onClick={onCancel}
+          >
+            <span className="text-sm">Cancelar viaje</span>
+          </Button>
+          <div className="mt-2 text-center">
+            <p className="text-xs text-gray-500">
+              Cancelación gratuita hasta que llegue tu conductor
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 };
