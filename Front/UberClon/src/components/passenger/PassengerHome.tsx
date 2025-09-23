@@ -35,7 +35,6 @@ export const PassengerHome: React.FC = () => {
     currentTrip,
     rideRequest,
     nearbyDrivers,
-    user,
     logout,
     setPickupLocation,
     setDestinationLocation,

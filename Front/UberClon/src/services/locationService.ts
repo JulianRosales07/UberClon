@@ -37,7 +37,7 @@ export interface DistanceCalculation {
 }
 
 export const getCurrentLocation = (): Promise<Location> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!navigator.geolocation) {
       // Fallback a Pasto si no hay geolocalización
       resolve({

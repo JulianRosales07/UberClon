@@ -62,7 +62,6 @@ const TripRequestWithMap: React.FC<TripRequestWithMapProps> = ({
 
   // Hook de geolocalización
   const {
-    location: currentLocation,
     error: locationError,
     isLoading: isLoadingLocation,
     getCurrentLocation
@@ -265,7 +264,7 @@ const TripRequestWithMap: React.FC<TripRequestWithMapProps> = ({
         {(error || locationError) && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <p className="text-red-700 text-sm">
-              {error || locationError?.message}
+              {error || locationError || 'Error de ubicación'}
             </p>
           </div>
         )}

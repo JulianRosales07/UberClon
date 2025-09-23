@@ -61,16 +61,16 @@ const destinationIcon = createCustomIcon('#EF4444', '🔴'); // Rojo para destin
 interface MapProps {
   center: Location;
   zoom?: number;
-  pickup?: Location;
-  destination?: Location;
+  pickup?: Location | null;
+  destination?: Location | null;
   drivers?: Driver[];
   className?: string;
 }
 
 const MapUpdater: React.FC<{ 
   center: Location; 
-  pickup?: Location; 
-  destination?: Location; 
+  pickup?: Location | null; 
+  destination?: Location | null; 
 }> = ({ center, pickup, destination }) => {
   const map = useMap();
   

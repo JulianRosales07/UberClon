@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Clock, Car, Bike, Calendar, User, Grid, Activity, UserCircle, Home, ArrowLeft, LogOut, Menu, X, MapPin, UserCheck } from 'lucide-react';
+import { Search, Car, Bike, Calendar, User, Grid, Activity, UserCircle, Home, LogOut, Menu, X, MapPin, UserCheck } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 interface Location {
@@ -30,7 +30,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     onSearch,
     onQuickRide
 }) => {
-    const { logout, user } = useAppStore();
+    const { logout } = useAppStore();
     const [showQuickOptions, setShowQuickOptions] = useState(false);
     const [isSearchingDriver, setIsSearchingDriver] = useState(false);
 
@@ -136,8 +136,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
     const handleQuickDestinationSelect = async (destination: QuickDestination) => {
         setShowQuickOptions(false);
+        setIsSearchingDriver(true);
         // En lugar de buscar conductor inmediatamente, ir al mapa para mostrar la ruta
         onQuickRide(destination);
+        // Simulate search completion
+        setTimeout(() => setIsSearchingDriver(false), 3000);
     };
 
     return (

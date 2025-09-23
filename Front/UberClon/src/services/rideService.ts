@@ -7,7 +7,10 @@ interface Location {
 interface Driver {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   rating: number;
+  userType: 'driver';
   vehicleInfo: {
     make: string;
     model: string;
@@ -43,7 +46,10 @@ export const getNearbyDrivers = (location: Location): Promise<Driver[]> => {
         {
           id: '1',
           name: 'Juan Carlos Pérez',
+          email: 'juan.perez@email.com',
+          phone: '+57 300 123 4567',
           rating: 4.9,
+          userType: 'driver' as const,
           vehicleInfo: {
             make: 'Toyota',
             model: 'Corolla',
@@ -62,7 +68,10 @@ export const getNearbyDrivers = (location: Location): Promise<Driver[]> => {
         {
           id: '2',
           name: 'María González',
+          email: 'maria.gonzalez@email.com',
+          phone: '+57 301 234 5678',
           rating: 4.8,
+          userType: 'driver' as const,
           vehicleInfo: {
             make: 'Chevrolet',
             model: 'Spark',
@@ -81,7 +90,10 @@ export const getNearbyDrivers = (location: Location): Promise<Driver[]> => {
         {
           id: '3',
           name: 'Carlos Rodríguez',
+          email: 'carlos.rodriguez@email.com',
+          phone: '+57 302 345 6789',
           rating: 4.7,
+          userType: 'driver' as const,
           vehicleInfo: {
             make: 'Nissan',
             model: 'Versa',
@@ -111,7 +123,10 @@ export const requestRide = (pickup: Location, destination: Location, fare: numbe
       const assignedDriver: Driver = {
         id: '1',
         name: 'Juan Carlos Pérez',
+        email: 'juan.perez@email.com',
+        phone: '+57 300 123 4567',
         rating: 4.9,
+        userType: 'driver' as const,
         vehicleInfo: {
           make: 'Toyota',
           model: 'Corolla',
@@ -144,7 +159,7 @@ export const requestRide = (pickup: Location, destination: Location, fare: numbe
 };
 
 // Simular actualización del estado del viaje
-export const updateTripStatus = (tripId: string, status: Trip['status']): Promise<Trip> => {
+export const updateTripStatus = (_tripId: string, _status: Trip['status']): Promise<Trip> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // Aquí normalmente harías una llamada a la API

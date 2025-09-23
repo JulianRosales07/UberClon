@@ -27,7 +27,7 @@ export const MusicRequestManager: React.FC<MusicRequestManagerProps> = ({
   onPlayRequest,
   onStopRequest
 }) => {
-  const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
+  const [_expandedRequest, _setExpandedRequest] = useState<string | null>(null);
 
   const pendingRequests = requests.filter(req => req.status === 'pending');
   const acceptedRequests = requests.filter(req => req.status === 'accepted');

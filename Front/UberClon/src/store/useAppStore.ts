@@ -90,8 +90,8 @@ interface AppState {
   // Actions
   setUser: (user: User | null) => void;
   setCurrentLocation: (location: Location) => void;
-  setPickupLocation: (location: Location) => void;
-  setDestinationLocation: (location: Location) => void;
+  setPickupLocation: (location: Location | null) => void;
+  setDestinationLocation: (location: Location | null) => void;
   setCurrentTrip: (trip: Trip | null) => void;
   setRideRequest: (request: RideRequest | null) => void;
   setNearbyDrivers: (drivers: Driver[]) => void;

@@ -6,7 +6,7 @@ interface Location {
   address?: string;
 }
 
-interface GeolocationPosition {
+interface CustomGeolocationPosition {
   coordinates: Location;
   accuracy: number;
   timestamp: number;
@@ -18,18 +18,18 @@ interface GeolocationOptions {
   timeout?: number;
   maximumAge?: number;
   watch?: boolean;
-  onLocationUpdate?: (position: GeolocationPosition) => void;
+  onLocationUpdate?: (position: CustomGeolocationPosition) => void;
   onLocationError?: (error: GeolocationPositionError) => void;
   usePastoLocation?: boolean; // Para desarrollo/demo
   autoStart?: boolean;
 }
 
 interface UseGeolocationReturn {
-  location: GeolocationPosition | null;
+  location: CustomGeolocationPosition | null;
   error: string | null;
   isLoading: boolean;
   isWatching: boolean;
-  getCurrentLocation: () => Promise<GeolocationPosition>;
+  getCurrentLocation: () => Promise<CustomGeolocationPosition>;
   startWatching: () => void;
   stopWatching: () => void;
   clearError: () => void;
@@ -42,12 +42,10 @@ export const useGeolocation = (options: GeolocationOptions = {}): UseGeolocation
     maximumAge = 60000,
     watch = false,
     onLocationUpdate,
-    onLocationError,
-    usePastoLocation = false,
     autoStart = false
   } = options;
 
-  const [location, setLocation] = useState<GeolocationPosition | null>(null);
+  const [location, setLocation] = useState<CustomGeolocationPosition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isWatching, setIsWatching] = useState(false);
@@ -61,7 +59,7 @@ export const useGeolocation = (options: GeolocationOptions = {}): UseGeolocation
   };
 
   const handleSuccess = useCallback(async (position: GeolocationPosition) => {
-    const newLocation: GeolocationPosition = {
+    const newLocation: CustomGeolocationPosition = {
       coordinates: {
         lat: position.coords.latitude,
         lng: position.coords.longitude
@@ -90,9 +88,9 @@ export const useGeolocation = (options: GeolocationOptions = {}): UseGeolocation
     onLocationUpdate?.(newLocation);
   }, [onLocationUpdate]);
 
-  const handleError = useCallback((error: GeolocationPositionError) => {
+  const handleError = useCallback((_error: GeolocationPositionError) => {
     // Siempre usar ubicación de Pasto
-    const pastoLocation: GeolocationPosition = {
+    const pastoLocation: CustomGeolocationPosition = {
       coordinates: {
         lat: 1.223789,
         lng: -77.283255,
@@ -109,10 +107,10 @@ export const useGeolocation = (options: GeolocationOptions = {}): UseGeolocation
     onLocationUpdate?.(pastoLocation);
   }, [onLocationUpdate]);
 
-  const getCurrentLocation = useCallback((): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
+  const getCurrentLocation = useCallback((): Promise<CustomGeolocationPosition> => {
+    return new Promise((resolve) => {
       // Siempre usar ubicación de Pasto para esta aplicación
-      const pastoLocation: GeolocationPosition = {
+      const pastoLocation: CustomGeolocationPosition = {
         coordinates: {
           lat: 1.223789,
           lng: -77.283255,

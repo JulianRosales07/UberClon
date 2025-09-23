@@ -71,7 +71,7 @@ export const TripStatus: React.FC<TripStatusProps> = ({ trip }) => {
     }, 2000 + Math.random() * 3000); // Entre 2-5 segundos
   };
 
-  const handleRetryMusicRequest = (requestId: string) => {
+  const handleRetryMusicRequest = (_requestId: string) => {
     setShowMusicRequest(true);
   };
 

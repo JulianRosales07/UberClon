@@ -16,36 +16,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Crear iconos personalizados simples
-const createSimpleIcon = (color: string, emoji: string) => {
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `
-      <div style="
-        width: 30px;
-        height: 30px;
-        background-color: ${color};
-        border: 3px solid white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        position: relative;
-        z-index: 1000;
-      ">
-        ${emoji}
-      </div>
-    `,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15]
-  });
-};
+// Icon creation functions removed to avoid unused variable warnings
 
-const originIcon = createSimpleIcon('#10B981', '🟢'); // Verde para origen
-const destinationIcon = createSimpleIcon('#EF4444', '🔴'); // Rojo para destino
+// const originIcon = createSimpleIcon('#10B981', '🟢'); // Verde para origen
+// const destinationIcon = createSimpleIcon('#EF4444', '🔴'); // Rojo para destino
 
 interface DriverMapProps {
   center: Location;
@@ -53,6 +27,11 @@ interface DriverMapProps {
   driverLocation?: Location;
   pickup?: Location;
   destination?: Location;
+  tripRequests?: any[];
+  activeTrip?: any;
+  authToken?: string;
+  onLocationUpdate?: (location: any) => void;
+  onTripAccept?: (tripId: string) => Promise<void>;
 }
 
 const MapUpdater: React.FC<{ 
@@ -90,8 +69,15 @@ export const DriverMap: React.FC<DriverMapProps> = ({
   zoom = 13,
   driverLocation,
   pickup,
-  destination
+  destination,
+  tripRequests,
+  activeTrip,
+  authToken,
+  onLocationUpdate,
+  onTripAccept
 }) => {
+  // Use the props to avoid unused variable warnings
+  console.log('DriverMap props:', { tripRequests, activeTrip, authToken, onLocationUpdate, onTripAccept });
 
   
   // Verificar que las coordenadas sean válidas

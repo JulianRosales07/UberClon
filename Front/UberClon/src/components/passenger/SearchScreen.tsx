@@ -21,7 +21,7 @@ interface ApiLocation {
 interface SearchScreenProps {
   onBack: () => void;
   onLocationSelect: (pickup: Location, destination: Location) => void;
-  currentLocation?: Location;
+  currentLocation?: Location | null;
 }
 
 interface LocationSuggestion {
@@ -37,7 +37,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   onLocationSelect,
   currentLocation
 }) => {
-  const { user, logout } = useAppStore();
+  const { logout } = useAppStore();
   const [pickupInput, setPickupInput] = useState(currentLocation?.address || 'Centro de Pasto, Nariño');
   const [destinationInput, setDestinationInput] = useState('');
   const [activeInput, setActiveInput] = useState<'pickup' | 'destination'>('destination');
@@ -274,12 +274,6 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
           } catch (error) {
             console.error('Error obteniendo ubicación:', error);
             // Fallback sin geocodificación inversa
-            const currentLoc: Location = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              address: 'Tu ubicación actual'
-            };
-
             if (activeInput === 'pickup') {
               setPickupInput('Tu ubicación actual');
               setActiveInput('destination');
@@ -301,10 +295,10 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
           };
 
           if (activeInput === 'pickup') {
-            setPickupInput(pastoLocation.address);
+            setPickupInput(pastoLocation.address || 'Centro de Pasto, Nariño');
             setActiveInput('destination');
           } else {
-            setDestinationInput(pastoLocation.address);
+            setDestinationInput(pastoLocation.address || 'Centro de Pasto, Nariño');
           }
         },
         {
@@ -322,10 +316,10 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
       };
 
       if (activeInput === 'pickup') {
-        setPickupInput(pastoLocation.address);
+        setPickupInput(pastoLocation.address || 'Centro de Pasto, Nariño');
         setActiveInput('destination');
       } else {
-        setDestinationInput(pastoLocation.address);
+        setDestinationInput(pastoLocation.address || 'Centro de Pasto, Nariño');
       }
     }
   };

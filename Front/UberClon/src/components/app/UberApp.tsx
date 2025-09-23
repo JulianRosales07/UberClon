@@ -54,10 +54,6 @@ const UberApp: React.FC<UberAppProps> = ({ user, onLogin, onLogout }) => {
   const {
     location: currentLocation,
     error: locationError,
-    isLoading: isLoadingLocation,
-    getCurrentLocation,
-    startWatching,
-    stopWatching,
     isWatching
   } = useGeolocation({
     enableHighAccuracy: true,
@@ -280,11 +276,11 @@ const UberApp: React.FC<UberAppProps> = ({ user, onLogin, onLogout }) => {
             />
           ) : (
             <DriverMap
-              center={currentLocation?.coordinates}
+              center={currentLocation?.coordinates || { lat: 1.223789, lng: -77.283255 }}
               driverLocation={currentLocation?.coordinates}
               activeTrip={activeTrip || undefined}
               authToken={user.token}
-              onLocationUpdate={(location) => {
+              onLocationUpdate={(location: any) => {
                 console.log('Ubicación actualizada:', location);
               }}
             />
@@ -292,12 +288,12 @@ const UberApp: React.FC<UberAppProps> = ({ user, onLogin, onLogout }) => {
         ) : (
           // Vista de conductor
           <DriverMap
-            center={currentLocation?.coordinates}
+            center={currentLocation?.coordinates || { lat: 1.223789, lng: -77.283255 }}
             driverLocation={currentLocation?.coordinates}
             tripRequests={tripRequests}
             activeTrip={activeTrip || undefined}
             authToken={user.token}
-            onLocationUpdate={(location) => {
+            onLocationUpdate={(location: any) => {
               console.log('Ubicación del conductor actualizada:', location);
             }}
             onTripAccept={handleTripAccept}
@@ -346,7 +342,7 @@ const UberApp: React.FC<UberAppProps> = ({ user, onLogin, onLogout }) => {
             <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center space-x-2">
                 <span className="text-red-500">⚠️</span>
-                <span className="text-sm text-red-700">{locationError.message}</span>
+                <span className="text-sm text-red-700">{locationError || 'Error de ubicación'}</span>
               </div>
             </div>
           )}
@@ -354,7 +350,7 @@ const UberApp: React.FC<UberAppProps> = ({ user, onLogin, onLogout }) => {
       )}
 
       {/* Estilos CSS */}
-      <style jsx>{`
+      <style>{`
         @keyframes slide-down {
           from {
             transform: translateY(-100%);

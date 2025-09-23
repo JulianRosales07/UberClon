@@ -364,7 +364,7 @@ class GeolocationService {
   /**
    * Search places
    */
-  async searchPlaces(query: string, location?: Location): Promise<Location[]> {
+  async searchPlaces(query: string, _location?: Location): Promise<Location[]> {
     // Usar nuestras ubicaciones predefinidas en lugar de la API externa
     const suggestions = await this.getAutocompleteSuggestions(query);
     return suggestions.map(suggestion => ({

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../common/Button';
 import { useAppStore } from '../../store/useAppStore';
-import { Car, Users } from 'lucide-react';
+import { Car } from 'lucide-react';
 
 interface User {
   id: string;

@@ -33,7 +33,7 @@ interface InTripViewProps {
 }
 
 export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) => {
-  const { setCurrentTrip } = useAppStore();
+  const { } = useAppStore();
   const [showMusicRequest, setShowMusicRequest] = useState(false);
   const [musicRequests, setMusicRequests] = useState<MusicRequestData[]>([]);
   const [progress, setProgress] = useState(0);
@@ -93,7 +93,7 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
     }, 2000 + Math.random() * 3000);
   };
 
-  const handleRetryMusicRequest = (requestId: string) => {
+  const handleRetryMusicRequest = (_requestId: string) => {
     setShowMusicRequest(true);
   };
 

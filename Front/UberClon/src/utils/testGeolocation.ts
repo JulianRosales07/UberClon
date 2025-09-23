@@ -89,10 +89,7 @@ export class GeolocationTester {
         accuracy: 10
       };
 
-      const response = await this.geolocationService.getCurrentLocationInfo(
-        testLocation.lat,
-        testLocation.lng
-      );
+      const response = await this.geolocationService.reverseGeocode(testLocation);
 
       console.log('✅ API de ubicación funcionando:', response);
       return response;
@@ -109,7 +106,7 @@ export class GeolocationTester {
     console.log('🧪 Probando búsqueda de lugares...');
     
     try {
-      const results = await this.geolocationService.searchPlaces('Central Park', 3);
+      const results = await this.geolocationService.searchPlaces('Central Park');
       console.log('✅ Búsqueda de lugares funcionando:', results);
       return results;
     } catch (error) {
@@ -125,7 +122,7 @@ export class GeolocationTester {
     console.log('🧪 Probando autocompletado...');
     
     try {
-      const suggestions = await this.geolocationService.getAutocompleteSuggestions('Times', 5);
+      const suggestions = await this.geolocationService.getAutocompleteSuggestions('Times');
       console.log('✅ Autocompletado funcionando:', suggestions);
       return suggestions;
     } catch (error) {
@@ -200,16 +197,11 @@ export class GeolocationTester {
     console.log(`🧪 Probando con ubicación mock: ${lat}, ${lng}`);
     
     try {
-      const locationInfo = await this.geolocationService.getCurrentLocationInfo(lat, lng);
+      const locationInfo = await this.geolocationService.reverseGeocode({ lat, lng });
       console.log('✅ Información de ubicación mock:', locationInfo);
       
       // Mostrar información relevante
-      if (locationInfo.current_location) {
-        console.log('📍 Dirección:', locationInfo.current_location.address?.formatted);
-        console.log('🏙️ Ciudad:', locationInfo.location_context?.city);
-        console.log('🌍 País:', locationInfo.location_context?.country);
-        console.log('🏢 Lugares cercanos:', locationInfo.nearby_places?.length || 0);
-      }
+      console.log('📍 Dirección:', locationInfo);
     } catch (error) {
       console.error('❌ Error con ubicación mock:', error);
     }
