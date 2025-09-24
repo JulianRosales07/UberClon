@@ -69,8 +69,8 @@ interface MapProps {
 
 const MapUpdater: React.FC<{ 
   center: Location; 
-  pickup?: Location | null; 
-  destination?: Location | null; 
+  pickup?: Location; 
+  destination?: Location; 
 }> = ({ center, pickup, destination }) => {
   const map = useMap();
   

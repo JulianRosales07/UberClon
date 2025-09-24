@@ -24,40 +24,46 @@ export const RideOptions: React.FC<RideOptionsProps> = ({ onSelectRide, distance
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
 
-  // Calcular distancia real cuando se monta el componente
+  // Función para calcular distancia usando fórmula de Haversine (sin backend)
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    return Math.round(distance * 100) / 100; // Redondear a 2 decimales
+  };
+
+  // Calcular distancia localmente cuando se monta el componente
   useEffect(() => {
     if (pickupLocation && destinationLocation && !propDistance) {
       setIsCalculating(true);
       setCalculationError(null);
       
-      // Usar API real para calcular distancia
-      fetch(`${import.meta.env.VITE_API_URL}/locations-test/distance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: { lat: pickupLocation.lat, lon: pickupLocation.lng },
-          to: { lat: destinationLocation.lat, lon: destinationLocation.lng }
-        })
-      })
-        .then(response => response.json())
-        .then((data) => {
-          if (data.success) {
-            setDistance(data.data.distance);
-          } else {
-            throw new Error('Error en respuesta de API');
-          }
-        })
-        .catch((error) => {
+      // Simular un pequeño delay para mostrar el loading
+      setTimeout(() => {
+        try {
+          const calculatedDistance = calculateDistance(
+            pickupLocation.lat,
+            pickupLocation.lng,
+            destinationLocation.lat,
+            destinationLocation.lng
+          );
+          setDistance(calculatedDistance);
+        } catch (error) {
           console.error('Error calculando distancia:', error);
           setCalculationError('Error calculando distancia');
-          // Fallback a estimación básica
-          setDistance(5);
-        })
-        .finally(() => {
+          setDistance(5); // Fallback
+        } finally {
           setIsCalculating(false);
-        });
+        }
+      }, 500);
     }
   }, [pickupLocation, destinationLocation, propDistance]);
 

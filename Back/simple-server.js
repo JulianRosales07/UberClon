@@ -188,9 +188,23 @@ app.get('/api/locations-test/details/:lat/:lon', async (req, res) => {
 // Cálculo de distancia
 app.post('/api/locations-test/distance', (req, res) => {
   try {
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+    
     const { from, to } = req.body;
     
+    console.log('Parsed from:', from);
+    console.log('Parsed to:', to);
+    
     if (!from || !to || !from.lat || !from.lon || !to.lat || !to.lon) {
+      console.log('Validation failed:', {
+        from: from,
+        to: to,
+        fromLat: from?.lat,
+        fromLon: from?.lon,
+        toLat: to?.lat,
+        toLon: to?.lon
+      });
       return res.status(400).json({
         success: false,
         message: 'Coordenadas de origen y destino son requeridas'
