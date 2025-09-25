@@ -7,11 +7,18 @@ import { SearchScreen } from './SearchScreen';
 import { HomeScreen } from './HomeScreen';
 import { InTripView } from './InTripView';
 import { PaymentView } from './PaymentView';
+import { DriverSearchIndicator } from './DriverSearchIndicator';
+import { QuickLocationTest } from '../common/QuickLocationTest';
 import { useAppStore } from '../../store/useAppStore';
+import { useRideNotifications } from '../../hooks/useRideNotifications';
+import { useSimpleGeolocation } from '../../hooks/useSimpleGeolocation';
+import { createRideRequest } from '../../services/rideService';
 // Removido import innecesario ya que usamos simulación local
 // Importar funciones de geolocalización
 import { MapPin, Navigation, X, ArrowLeft, UserCheck, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '../common/Button';
+import { LocationToast } from '../common/LocationToast';
+import { LocationStatus } from '../common/LocationStatus';
 
 interface Location {
   lat: number;
@@ -50,138 +57,91 @@ export const PassengerHome: React.FC = () => {
   const [showInTrip, setShowInTrip] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [bottomPanelExpanded, setBottomPanelExpanded] = useState(false);
+  
+  // Estados para notificaciones en tiempo real
+  const [isSearchingDriver, setIsSearchingDriver] = useState(false);
+  const [searchMessage, setSearchMessage] = useState('');
+  const [driversFound, setDriversFound] = useState(0);
+  const [foundDriver, setFoundDriver] = useState<any>(null);
+  
+  // Estado para toast de ubicación
+  const [locationToast, setLocationToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'info' | 'warning' | 'error';
+  }>({
+    show: false,
+    message: '',
+    type: 'info'
+  });
 
-  // Estado para manejar la geolocalización
-  const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error' | 'denied'>('loading');
+  // Datos del pasajero para notificaciones
+  const [passengerData] = useState({
+    passengerId: 'passenger_123', // ID único del pasajero
+    name: 'Usuario Pasajero'
+  });
 
-  // Verificar si estamos en un contexto seguro (HTTPS o localhost)
-  const isSecureContext = () => {
-    return window.isSecureContext ||
-      window.location.protocol === 'https:' ||
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
-  };
+  // Hook para notificaciones en tiempo real
+  const {
+    socket,
+    isConnected
+  } = useRideNotifications(passengerData, 'passenger');
 
-  // Función de diagnóstico
-  const runGeolocationDiagnostic = () => {
-    console.log('🔍 === DIAGNÓSTICO DE GEOLOCALIZACIÓN ===');
-    console.log('Navigator disponible:', !!navigator);
-    console.log('Geolocation API disponible:', !!navigator.geolocation);
-    console.log('Contexto seguro (HTTPS/localhost):', isSecureContext());
-    console.log('URL actual:', window.location.href);
-    console.log('Protocolo:', window.location.protocol);
-    console.log('Hostname:', window.location.hostname);
-    console.log('User Agent:', navigator.userAgent);
-
-    if ('permissions' in navigator) {
-      navigator.permissions.query({ name: 'geolocation' }).then(permission => {
-        console.log('Estado del permiso:', permission.state);
-      });
-    } else {
-      console.log('Permissions API no disponible');
+  // Hook simple para geolocalización
+  const {
+    location: detectedLocation,
+    status: locationStatus,
+    error: locationError,
+    accuracy,
+    retry: retryLocation,
+    usePastoLocation,
+    retryCount
+  } = useSimpleGeolocation({
+    enableHighAccuracy: true,
+    timeout: 20000,
+    maximumAge: 0,
+    maxRetries: 2,
+    fallbackLocation: {
+      lat: 1.2136,
+      lng: -77.2811,
+      address: 'Centro de Pasto, Nariño'
     }
-  };
+  });
 
-  const initializeLocation = async () => {
-    console.log('🚀 Iniciando geolocalización...');
-    runGeolocationDiagnostic();
-    setLocationStatus('loading');
-
-    // Función para establecer ubicación por defecto
-    const setDefaultLocation = (reason: string) => {
-      console.log(`📍 Usando ubicación por defecto: ${reason}`);
-      const defaultLocation: Location = {
-        lat: 1.223789,
-        lng: -77.283255,
-        address: 'Centro de Pasto, Nariño'
-      };
-      setCurrentLocation(defaultLocation);
-      setPickupLocation(defaultLocation);
-      setLocationStatus('error');
-    };
-
-    // Verificar si la geolocalización está disponible
-    if (!navigator.geolocation) {
-      setDefaultLocation('Geolocalización no soportada por el navegador');
-      return;
-    }
-
-    // Verificar contexto seguro
-    if (!isSecureContext()) {
-      console.warn('⚠️ Geolocalización requiere HTTPS o localhost');
-      setDefaultLocation('Geolocalización requiere conexión segura (HTTPS)');
-      return;
-    }
-
-    try {
-      // Verificar permisos primero
-      if ('permissions' in navigator) {
-        const permission = await navigator.permissions.query({ name: 'geolocation' });
-        console.log('Estado del permiso de geolocalización:', permission.state);
-
-        if (permission.state === 'denied') {
-          setDefaultLocation('Permisos de geolocalización denegados');
-          return;
-        }
-      }
-
-      // Intentar obtener la ubicación
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000
-          }
-        );
-      });
-
-      // Éxito - usar ubicación real
-      const location: Location = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        address: 'Tu ubicación actual'
-      };
-
-      console.log('✅ Ubicación obtenida exitosamente:', location);
-      setCurrentLocation(location);
-      setPickupLocation(location);
-      setLocationStatus('success');
-
-    } catch (error: any) {
-      console.warn('❌ Error obteniendo ubicación:', error);
-
-      // Manejar diferentes tipos de errores
-      let reason = 'Error desconocido';
-      if (error.code) {
-        switch (error.code) {
-          case 1:
-            reason = 'Permisos denegados por el usuario';
-            setLocationStatus('denied');
-            break;
-          case 2:
-            reason = 'Sin conexión a internet - usando modo offline';
-            console.log('🌐 Detectado modo offline, usando ubicación por defecto');
-            break;
-          case 3:
-            reason = 'Timeout - tomó demasiado tiempo';
-            break;
-          default:
-            reason = `Error de geolocalización (código: ${error.code})`;
-        }
-      }
-
-      setDefaultLocation(reason);
-    }
-  };
-
+  // Efecto para actualizar la ubicación cuando se detecte
   useEffect(() => {
-    if (!currentLocation) {
-      initializeLocation();
+    if (detectedLocation) {
+      console.log('📍 Actualizando ubicación detectada:', detectedLocation);
+      setCurrentLocation(detectedLocation);
+      
+      // Mostrar toast según el tipo de ubicación
+      if (detectedLocation.address?.includes('Manual')) {
+        setLocationToast({
+          show: true,
+          message: '📍 Ubicación establecida en Pasto manualmente',
+          type: 'success'
+        });
+      } else if (detectedLocation.address?.includes('GPS')) {
+        setLocationToast({
+          show: true,
+          message: '🛰️ Ubicación GPS obtenida correctamente',
+          type: 'success'
+        });
+      } else {
+        setLocationToast({
+          show: true,
+          message: '📍 Ubicación establecida en Pasto (fallback)',
+          type: 'info'
+        });
+      }
+      
+      // Solo actualizar pickup si no hay uno establecido o si es la ubicación por defecto
+      if (!pickupLocation || 
+          (pickupLocation.lat === 1.223789 && pickupLocation.lng === -77.283255)) {
+        setPickupLocation(detectedLocation);
+      }
     }
-  }, [currentLocation, setCurrentLocation, setPickupLocation]);
+  }, [detectedLocation, setCurrentLocation, setPickupLocation, pickupLocation]);
 
   // Datos simulados de ubicaciones populares en Pasto
   const getSimulatedCoordinates = (address: string): { lat: number; lng: number } => {
@@ -307,69 +267,57 @@ export const PassengerHome: React.FC = () => {
           destinationLocation.lng
         );
 
-        const request: RideRequest = {
-          pickup: pickupLocation,
-          destination: destinationLocation,
-          estimatedFare: Math.ceil(distance * 2500 + 3000), // $2500 por km + tarifa base
-          estimatedTime: Math.ceil(distance * 2 + 5), // 2 min por km + tiempo base
-          distance: distance
-        };
+        const estimatedFare = Math.ceil(distance * 2500 + 3000); // $2500 por km + tarifa base
 
-        setRideRequest(request);
         setShowRideOptions(false);
+        setIsSearchingDriver(true);
+        setSearchMessage('Creando solicitud de viaje...');
 
-        // Simular búsqueda y asignación de conductor (sin backend)
-        setTimeout(() => {
-          const simulatedTrip = {
-            id: `trip_${Date.now()}`,
-            passengerId: 'current-user',
-            driverId: 'driver_1',
-            status: 'accepted' as const,
+        try {
+          // Crear solicitud en el backend
+          const rideData = await createRideRequest(
+            passengerData.passengerId,
+            passengerData.name,
+            pickupLocation,
+            destinationLocation,
+            estimatedFare
+          );
+
+          console.log('✅ Solicitud creada:', rideData);
+          setSearchMessage('Buscando conductores cercanos...');
+
+          // Enviar solicitud a través de WebSocket
+          if (socket && isConnected) {
+            socket.emit('request-ride', {
+              rideId: rideData.rideId,
+              passengerId: passengerData.passengerId,
+              passengerName: passengerData.name,
+              pickup: pickupLocation,
+              destination: destinationLocation,
+              estimatedFare: estimatedFare
+            });
+          } else {
+            throw new Error('No hay conexión WebSocket');
+          }
+
+        } catch (error) {
+          console.error('Error al crear solicitud:', error);
+          setIsSearchingDriver(false);
+          
+          // Fallback: usar simulación local
+          const request: RideRequest = {
             pickup: pickupLocation,
             destination: destinationLocation,
-            fare: request.estimatedFare,
-            estimatedTime: request.estimatedTime,
-            distance: distance,
-            driver: {
-              id: 'driver_1',
-              name: 'Juan Carlos Pérez',
-              email: 'juan.perez@email.com',
-              phone: '+57 300 123 4567',
-              rating: 4.9,
-              userType: 'driver' as const,
-              vehicleInfo: {
-                make: 'Toyota',
-                model: 'Corolla',
-                year: 2020,
-                color: 'Blanco',
-                licensePlate: 'ABC-123'
-              },
-              totalTrips: 1250,
-              location: {
-                lat: pickupLocation.lat + (Math.random() - 0.5) * 0.01,
-                lng: pickupLocation.lng + (Math.random() - 0.5) * 0.01
-              },
-              isAvailable: false
-            },
-            createdAt: new Date()
+            estimatedFare: estimatedFare,
+            estimatedTime: Math.ceil(distance * 2 + 5),
+            distance: distance
           };
-
-          setCurrentTrip(simulatedTrip);
-          setRideRequest(null);
-        }, 2000); // Simular 2 segundos de búsqueda
+          setRideRequest(request);
+        }
 
       } catch (error) {
         console.error('Error al solicitar viaje:', error);
-        // Fallback con datos estimados
-        const request: RideRequest = {
-          pickup: pickupLocation,
-          destination: destinationLocation,
-          estimatedFare: option.price || 15000,
-          estimatedTime: option.estimatedTime || 10,
-          distance: 5
-        };
-        setRideRequest(request);
-        setShowRideOptions(false);
+        setIsSearchingDriver(false);
       }
     }
   };
@@ -377,6 +325,8 @@ export const PassengerHome: React.FC = () => {
   const handleCancelRequest = () => {
     setRideRequest(null);
     setShowRideOptions(false);
+    setIsSearchingDriver(false);
+    setFoundDriver(null);
   };
 
   const handleTripStart = () => {
@@ -456,6 +406,79 @@ export const PassengerHome: React.FC = () => {
     }
   }, [currentLocation, setNearbyDrivers]);
 
+  // Escuchar eventos de WebSocket para pasajeros
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDriverAccepted = (driverData: any) => {
+      console.log('🎉 ¡Conductor encontrado!:', driverData);
+      setIsSearchingDriver(false);
+      setFoundDriver(driverData);
+      
+      // Crear trip simulado con datos del conductor
+      const simulatedTrip = {
+        id: `trip_${Date.now()}`,
+        passengerId: passengerData.passengerId,
+        driverId: driverData.driverId,
+        status: 'accepted' as const,
+        pickup: pickupLocation!,
+        destination: destinationLocation!,
+        fare: rideRequest?.estimatedFare || 15000,
+        estimatedTime: 8,
+        distance: 5,
+        driver: {
+          id: driverData.driverId,
+          name: driverData.driverName,
+          email: 'conductor@email.com',
+          phone: '+57 300 123 4567',
+          rating: 4.9,
+          userType: 'driver' as const,
+          vehicleInfo: {
+            make: 'Toyota',
+            model: 'Corolla',
+            year: 2020,
+            color: 'Blanco',
+            licensePlate: 'ABC-123'
+          },
+          totalTrips: 1250,
+          location: driverData.driverLocation || pickupLocation!,
+          isAvailable: false
+        },
+        createdAt: new Date()
+      };
+
+      setCurrentTrip(simulatedTrip);
+      setRideRequest(null);
+    };
+
+    const handleNoDriversAvailable = () => {
+      console.log('😔 No hay conductores disponibles');
+      setIsSearchingDriver(false);
+      setSearchMessage('No hay conductores disponibles en este momento');
+      
+      // Mostrar mensaje por 3 segundos y luego volver a opciones
+      setTimeout(() => {
+        setShowRideOptions(true);
+      }, 3000);
+    };
+
+    const handleRideRequestSent = (data: any) => {
+      console.log('📤 Solicitud enviada:', data);
+      setSearchMessage(data.message || 'Buscando conductor disponible...');
+      setDriversFound(data.driversFound || 0);
+    };
+
+    socket.on('driver-accepted', handleDriverAccepted);
+    socket.on('no-drivers-available', handleNoDriversAvailable);
+    socket.on('ride-request-sent', handleRideRequestSent);
+
+    return () => {
+      socket.off('driver-accepted', handleDriverAccepted);
+      socket.off('no-drivers-available', handleNoDriversAvailable);
+      socket.off('ride-request-sent', handleRideRequestSent);
+    };
+  }, [socket, passengerData, pickupLocation, destinationLocation, rideRequest]);
+
   // Mostrar pantalla principal de inicio
   if (showHomeScreen) {
     return (
@@ -516,6 +539,9 @@ export const PassengerHome: React.FC = () => {
               pickup={pickupLocation}
               destination={destinationLocation}
               drivers={nearbyDrivers}
+              showRoute={true}
+              routeColor="#2563eb"
+              driverLocation={currentTrip.driver.location}
             />
           </div>
           <DriverFound
@@ -544,6 +570,30 @@ export const PassengerHome: React.FC = () => {
     return <TripStatus trip={currentTrip} />;
   }
 
+  // Mostrar indicador de búsqueda de conductor
+  if (isSearchingDriver) {
+    return (
+      <div className="h-screen flex flex-col">
+        <div className="flex-1">
+          <Map
+            center={currentLocation || { lat: 1.223789, lng: -77.283255 }}
+            pickup={pickupLocation}
+            destination={destinationLocation}
+            drivers={nearbyDrivers}
+            showRoute={true}
+            routeColor="#10B981"
+          />
+        </div>
+        <DriverSearchIndicator
+          isSearching={isSearchingDriver}
+          onCancel={handleCancelRequest}
+          driversFound={driversFound}
+          searchMessage={searchMessage}
+        />
+      </div>
+    );
+  }
+
   if (rideRequest) {
     return (
       <div className="h-screen flex flex-col">
@@ -553,6 +603,8 @@ export const PassengerHome: React.FC = () => {
             pickup={pickupLocation}
             destination={destinationLocation}
             drivers={nearbyDrivers}
+            showRoute={true}
+            routeColor="#10B981"
           />
         </div>
         <div className="bg-white p-6">
@@ -612,26 +664,21 @@ export const PassengerHome: React.FC = () => {
         <div className="text-center">
           <h1 className="text-lg font-semibold">Solicitar viaje</h1>
           <div className="flex items-center justify-center space-x-2">
-            {locationStatus === 'loading' && (
-              <p className="text-xs text-blue-600">🔄 Obteniendo ubicación...</p>
-            )}
-            {locationStatus === 'success' && (
-              <p className="text-xs text-green-600">✓ Ubicación GPS activa</p>
-            )}
-            {locationStatus === 'error' && (
-              <p className="text-xs text-orange-600">⚠️ Usando ubicación por defecto</p>
-            )}
-            {locationStatus === 'denied' && (
-              <div className="flex items-center space-x-1">
-                <p className="text-xs text-red-600">❌ GPS denegado</p>
-                <button
-                  onClick={initializeLocation}
-                  className="text-xs text-blue-600 underline"
-                >
-                  Reintentar
-                </button>
-              </div>
-            )}
+            {/* Indicador de conexión WebSocket */}
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-xs text-gray-600">
+              {isConnected ? 'Conectado' : 'Sin conexión'}
+            </span>
+            
+            {/* Estado de ubicación simplificado */}
+            <LocationStatus
+              status={locationStatus}
+              location={currentLocation}
+              accuracy={accuracy}
+              error={locationError}
+              onRetry={retryLocation}
+              onUsePasto={usePastoLocation}
+            />
           </div>
         </div>
         <button
@@ -650,14 +697,15 @@ export const PassengerHome: React.FC = () => {
           pickup={pickupLocation}
           destination={destinationLocation}
           drivers={nearbyDrivers}
+          showRoute={false}
         />
 
         {/* Botón flotante para activar GPS */}
         {(locationStatus === 'denied' || locationStatus === 'error') && (
           <button
-            onClick={initializeLocation}
+            onClick={retryLocation}
             className="absolute top-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition-colors z-10"
-            title="Activar ubicación GPS"
+            title="Reintentar ubicación GPS"
           >
             <Navigation className="w-5 h-5" />
           </button>
@@ -670,34 +718,51 @@ export const PassengerHome: React.FC = () => {
           </div>
         )}
 
-        {/* Panel de diagnóstico de geolocalización */}
+        {/* Botón flotante permanente para usar Pasto */}
+        <button
+          onClick={usePastoLocation}
+          className={`absolute top-4 left-4 p-3 rounded-full shadow-lg transition-colors z-10 ${
+            currentLocation && currentLocation.lat === 1.2136 
+              ? 'bg-green-500 hover:bg-green-600 text-white' 
+              : 'bg-purple-500 hover:bg-purple-600 text-white'
+          }`}
+          title={currentLocation && currentLocation.lat === 1.2136 ? "Ubicación establecida en Pasto" : "Establecer ubicación en Pasto"}
+        >
+          <MapPin className="w-5 h-5" />
+        </button>
+
+        {/* Panel de información de geolocalización mejorado */}
         {(locationStatus === 'denied' || locationStatus === 'error') && (
           <div className="absolute bottom-20 left-4 right-4 bg-white p-4 rounded-lg shadow-lg border z-10">
             <div className="text-center">
               <h3 className="font-semibold text-gray-900 mb-2">
-                {locationStatus === 'denied' ? '🚫 GPS Bloqueado' : '⚠️ Error de GPS'}
+                {locationStatus === 'denied' ? '🚫 GPS Bloqueado' : '⚠️ Ubicación Aproximada'}
               </h3>
               <p className="text-sm text-gray-600 mb-3">
-                {locationStatus === 'denied'
-                  ? 'Los permisos de ubicación están bloqueados'
-                  : 'No se pudo obtener tu ubicación actual'
-                }
+                {locationError || 'Usando ubicación aproximada basada en IP'}
               </p>
               <div className="space-y-2">
-                <button
-                  onClick={initializeLocation}
-                  className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  🔄 Reintentar GPS
-                </button>
-                <button
-                  onClick={runGeolocationDiagnostic}
-                  className="w-full bg-gray-500 text-white py-1 px-4 rounded-lg hover:bg-gray-600 transition-colors text-sm"
-                >
-                  🔍 Ver diagnóstico en consola
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={retryLocation}
+                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    🔄 Reintentar GPS
+                  </button>
+                  <button
+                    onClick={usePastoLocation}
+                    className="w-full bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors"
+                  >
+                    🏛️ Usar Pasto
+                  </button>
+                </div>
+                {!window.isSecureContext && (
+                  <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                    ⚠️ Para GPS preciso, usa HTTPS o localhost
+                  </div>
+                )}
                 <div className="text-xs text-gray-500">
-                  <p>💡 Para activar GPS:</p>
+                  <p>💡 Para GPS preciso:</p>
                   <p>1. Haz clic en el ícono 🔒 junto a la URL</p>
                   <p>2. Permite "Ubicación"</p>
                   <p>3. Recarga la página</p>
@@ -791,6 +856,18 @@ export const PassengerHome: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Test rápido de ubicación */}
+      <QuickLocationTest />
+
+      {/* Toast de ubicación */}
+      <LocationToast
+        show={locationToast.show}
+        message={locationToast.message}
+        type={locationToast.type}
+        onClose={() => setLocationToast(prev => ({ ...prev, show: false }))}
+        duration={4000}
+      />
     </div>
   );
 };

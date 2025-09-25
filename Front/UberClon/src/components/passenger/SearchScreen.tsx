@@ -47,64 +47,8 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const defaultSuggestions: LocationSuggestion[] = [
-    {
-      id: '1',
-      name: 'Unicentro',
-      address: 'Centro Comercial Unicentro',
-      distance: '1.6 km',
-      type: 'recent'
-    },
-    {
-      id: '2',
-      name: 'Avenida de los Estudiantes',
-      address: 'Avenida de los Estudiantes',
-      distance: '750 m',
-      type: 'recent'
-    },
-    {
-      id: '3',
-      name: 'Universidad Mariana',
-      address: 'Universidad Mariana',
-      distance: '150 m',
-      type: 'recent'
-    },
-    {
-      id: '4',
-      name: 'Único',
-      address: 'Centro Comercial Único',
-      distance: '4.1 km',
-      type: 'recent'
-    },
-    {
-      id: '5',
-      name: 'Tamasagra',
-      address: 'Tamasagra',
-      distance: '3.1 km',
-      type: 'recent'
-    },
-    {
-      id: '6',
-      name: 'Estadio Libertad',
-      address: 'Estadio Libertad',
-      distance: '4.2 km',
-      type: 'recent'
-    },
-    {
-      id: '7',
-      name: 'Parque Infantil',
-      address: 'Parque Infantil',
-      distance: '750 m',
-      type: 'recent'
-    },
-    {
-      id: '8',
-      name: 'Alvernia',
-      address: 'Alvernia',
-      distance: '2.4 km',
-      type: 'recent'
-    }
-  ];
+  // Deshabilitar sugerencias de prueba - solo mostrar cuando el usuario busque
+  const defaultSuggestions: LocationSuggestion[] = [];
 
   // Base de datos simulada de ubicaciones en Pasto
   const simulatedLocations = [
@@ -217,26 +161,13 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
       place_id: `local_${localLocation.name.replace(/\s+/g, '_').toLowerCase()}`
     });
 
-    // Primero generar resultados locales (siempre disponibles)
-    const searchTerm = query.toLowerCase().trim();
-    const localResults = simulatedLocations
-      .filter(location => {
-        const locationName = location.name.toLowerCase();
-        const locationType = location.type.toLowerCase();
-        
-        return locationName.includes(searchTerm) || 
-               locationType.includes(searchTerm) ||
-               searchTerm.split(' ').some(word => 
-                 locationName.includes(word) || locationType.includes(word)
-               );
-      })
-      .slice(0, 8)
-      .map(createLocalResult);
+    // Deshabilitar resultados locales simulados para usar solo API real
+    const localResults: any[] = [];
 
     // Verificar conectividad antes de intentar API
     if (!navigator.onLine) {
-      console.log('🌐 Sin conexión a internet, usando solo resultados locales');
-      setSearchResults(localResults);
+      console.log('🌐 Sin conexión a internet, no hay resultados disponibles');
+      setSearchResults([]);
       setIsSearching(false);
       return;
     }
@@ -283,14 +214,9 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
         .map(createApiResult)
         .filter(result => result.display_name !== 'Ubicación sin nombre');
 
-      // Combinar: API primero, luego locales (sin duplicados)
-      const combinedResults = [
-        ...apiResults,
-        ...localResults.slice(0, 8 - apiResults.length)
-      ];
-
-      console.log('✅ Resultados combinados (API + Local):', combinedResults.length, combinedResults);
-      setSearchResults(combinedResults);
+      // Solo usar resultados de API real
+      console.log('✅ Resultados de API real:', apiResults.length, apiResults);
+      setSearchResults(apiResults);
 
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -299,8 +225,8 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
         console.error('❌ Error en API:', error.message);
       }
       
-      console.log('📍 Usando solo resultados locales:', localResults.length, localResults);
-      setSearchResults(localResults);
+      console.log('📍 API falló, no hay resultados disponibles');
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }

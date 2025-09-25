@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { useRideNotifications } from '../../hooks/useRideNotifications';
+import { RideRequestModal } from './RideRequestModal';
 
 interface Location {
   lat: number;
@@ -32,6 +34,9 @@ interface DriverMapProps {
   authToken?: string;
   onLocationUpdate?: (location: any) => void;
   onTripAccept?: (tripId: string) => Promise<void>;
+  // Nuevas props para notificaciones
+  driverId?: string;
+  driverName?: string;
 }
 
 const MapUpdater: React.FC<{ 
@@ -74,10 +79,49 @@ export const DriverMap: React.FC<DriverMapProps> = ({
   activeTrip,
   authToken,
   onLocationUpdate,
-  onTripAccept
+  onTripAccept,
+  driverId = 'driver_123', // ID por defecto para testing
+  driverName = 'Conductor'
 }) => {
   // Use the props to avoid unused variable warnings
   console.log('DriverMap props:', { tripRequests, activeTrip, authToken, onLocationUpdate, onTripAccept });
+
+  // Estado para el conductor
+  const [driverData] = useState({
+    driverId,
+    name: driverName,
+    location: driverLocation
+  });
+
+  // Hook para notificaciones en tiempo real
+  const {
+    rideRequest,
+    isConnected,
+    acceptRide,
+    rejectRide,
+    updateLocation
+  } = useRideNotifications(driverData, 'driver');
+
+  // Actualizar ubicación cuando cambie driverLocation
+  useEffect(() => {
+    if (driverLocation && isConnected) {
+      updateLocation(driverLocation);
+    }
+  }, [driverLocation, isConnected, updateLocation]);
+
+  // Manejar aceptación de viaje
+  const handleAcceptRide = () => {
+    if (rideRequest) {
+      acceptRide(rideRequest.rideId, driverId);
+    }
+  };
+
+  // Manejar rechazo de viaje
+  const handleRejectRide = (reason?: string) => {
+    if (rideRequest) {
+      rejectRide(rideRequest.rideId, driverId, reason);
+    }
+  };
 
   
   // Verificar que las coordenadas sean válidas
@@ -92,7 +136,17 @@ export const DriverMap: React.FC<DriverMapProps> = ({
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full relative">
+      {/* Indicador de conexión */}
+      <div className="absolute top-4 right-4 z-10 bg-white rounded-lg shadow-lg p-2">
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <span className="text-sm font-medium">
+            {isConnected ? 'Conectado' : 'Desconectado'}
+          </span>
+        </div>
+      </div>
+
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={zoom}
@@ -150,6 +204,16 @@ export const DriverMap: React.FC<DriverMapProps> = ({
           </Marker>
         )}
       </MapContainer>
+
+      {/* Modal de notificación de viaje */}
+      {rideRequest && (
+        <RideRequestModal
+          request={rideRequest}
+          onAccept={handleAcceptRide}
+          onReject={handleRejectRide}
+          driverId={driverId}
+        />
+      )}
     </div>
   );
 };
