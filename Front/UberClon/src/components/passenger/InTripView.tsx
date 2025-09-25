@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Map } from '../common/Map';
+import { EnhancedLiveTracking } from '../common/EnhancedLiveTracking';
 import { Button } from '../common/Button';
 import { Phone, MessageCircle, Star, User, Music, Navigation, Clock, MapPin, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
@@ -40,11 +40,11 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
   const [timeRemaining, setTimeRemaining] = useState(trip.estimatedTime);
   const [panelExpanded, setPanelExpanded] = useState(false);
 
-  // Simular progreso del viaje
+  // Simular progreso del viaje sincronizado con el mapa
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress(prev => {
-        const newProgress = prev + (100 / (trip.estimatedTime * 60)); // Incremento por segundo
+        const newProgress = prev + (100 / (trip.estimatedTime * 6)); // Sincronizado con el mapa (más rápido)
         if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(() => {
@@ -56,10 +56,10 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
       });
 
       setTimeRemaining(prev => {
-        const newTime = prev - (1/60); // Decrementar por segundo
+        const newTime = prev - (1/6); // Decrementar sincronizado con el mapa
         return Math.max(0, newTime);
       });
-    }, 1000);
+    }, 600); // Mismo intervalo que el mapa
 
     return () => clearInterval(interval);
   }, [trip.estimatedTime, onTripComplete]);
@@ -115,8 +115,11 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-green-600 h-2 rounded-full transition-all duration-1000 ease-out"
-            style={{ width: `${progress}%` }}
+            className="bg-green-600 h-2 rounded-full transition-all duration-500 ease-out"
+            style={{ 
+              width: `${progress}%`,
+              transition: 'width 0.5s ease-out'
+            }}
           ></div>
         </div>
         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
@@ -135,12 +138,12 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
         </div>
       </div>
 
-      {/* Map */}
+      {/* Map con seguimiento en vivo mejorado */}
       <div className="flex-1">
-        <Map
-          center={trip.pickup}
-          pickup={trip.pickup}
-          destination={trip.destination}
+        <EnhancedLiveTracking
+          trip={trip}
+          updateInterval={600} // Sincronizado con la barra de progreso
+          routeColor="#10B981"
         />
       </div>
       
@@ -150,11 +153,11 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
       }`}>
         {/* Panel Header - Always Visible */}
         <div className="px-6 py-4 border-b border-gray-100">
-          <button
-            onClick={() => setPanelExpanded(!panelExpanded)}
-            className="w-full flex items-center justify-between"
-          >
-            <div className="flex items-center space-x-4">
+          <div className="w-full flex items-center justify-between">
+            <div 
+              className="flex items-center space-x-4 flex-1 cursor-pointer"
+              onClick={() => setPanelExpanded(!panelExpanded)}
+            >
               <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-gray-600" />
               </div>
@@ -175,21 +178,23 @@ export const InTripView: React.FC<InTripViewProps> = ({ trip, onTripComplete }) 
                   size="sm" 
                   variant="secondary" 
                   title="Solicitar música"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMusicRequest(true);
-                  }}
+                  onClick={() => setShowMusicRequest(true)}
                 >
                   <Music className="w-4 h-4" />
                 </Button>
               </div>
-              {panelExpanded ? (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              )}
+              <button
+                onClick={() => setPanelExpanded(!panelExpanded)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                {panelExpanded ? (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
             </div>
-          </button>
+          </div>
         </div>
 
         {/* Expandable Content */}

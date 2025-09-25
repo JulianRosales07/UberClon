@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { RealStreetRoute } from './RealStreetRoute';
 
 interface Location {
   lat: number;
@@ -57,6 +58,7 @@ const createCustomIcon = (color: string, emoji: string) => {
 
 const pickupIcon = createCustomIcon('#10B981', '🟢'); // Verde para origen
 const destinationIcon = createCustomIcon('#EF4444', '🔴'); // Rojo para destino
+const driverIcon = createCustomIcon('#3B82F6', '🚗'); // Azul para conductor
 
 interface MapProps {
   center: Location;
@@ -65,6 +67,9 @@ interface MapProps {
   destination?: Location | null;
   drivers?: Driver[];
   className?: string;
+  showRoute?: boolean;
+  routeColor?: string;
+  driverLocation?: Location | null;
 }
 
 const MapUpdater: React.FC<{ 
@@ -103,7 +108,10 @@ export const Map: React.FC<MapProps> = ({
   pickup,
   destination,
   drivers = [],
-  className = "h-full w-full"
+  className = "h-full w-full",
+  showRoute = true,
+  routeColor = "#2563eb",
+  driverLocation = null
 }) => {
   return (
     <div className={className}>
@@ -118,6 +126,17 @@ export const Map: React.FC<MapProps> = ({
         />
         
         <MapUpdater center={center} pickup={pickup} destination={destination} />
+        
+        {/* Mostrar ruta si hay origen y destino */}
+        {showRoute && pickup && destination && (
+          <RealStreetRoute
+            start={{ lat: pickup.lat, lng: pickup.lng }}
+            end={{ lat: destination.lat, lng: destination.lng }}
+            color={routeColor}
+            weight={5}
+            opacity={0.7}
+          />
+        )}
         
         {pickup && (
           <Marker 
@@ -149,6 +168,23 @@ export const Map: React.FC<MapProps> = ({
           </Marker>
         )}
         
+        {/* Mostrar conductor asignado si existe */}
+        {driverLocation && (
+          <Marker
+            position={[driverLocation.lat, driverLocation.lng]}
+            icon={driverIcon}
+          >
+            <Popup>
+              <div>
+                <strong>🚗 Tu conductor</strong><br />
+                {driverLocation.address || 'Conductor en camino'}<br />
+                <small>Lat: {driverLocation.lat}, Lng: {driverLocation.lng}</small>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Mostrar conductores disponibles */}
         {drivers.map((driver) => (
           <Marker
             key={driver.id}

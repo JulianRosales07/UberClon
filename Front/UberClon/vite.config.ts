@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    open: true
+    open: true,
+    allowedHosts: ['qimfxk-ip-191-156-5-191.tunnelmole.net']
   },
   preview: {
     port: 3000,

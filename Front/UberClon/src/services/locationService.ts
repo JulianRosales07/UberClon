@@ -166,22 +166,8 @@ export const calculateDistance = async (
 
 // Función auxiliar para ubicaciones locales de Pasto
 const getPastoLocations = (query: string): Location[] => {
-  const pastoLocations = [
-    { lat: 1.216386, lng: -77.288671, address: 'Centro Comercial Unicentro, Pasto' },
-    { lat: 1.226829, lng: -77.282465, address: 'Avenida de los Estudiantes, Pasto' },
-    { lat: 1.223802, lng: -77.283742, address: 'Universidad Mariana, Pasto' },
-    { lat: 1.205879, lng: -77.260628, address: 'Centro Comercial Único, Pasto' },
-    { lat: 1.204400, lng: -77.293005, address: 'Tamasagra, Pasto' },
-    { lat: 1.198087, lng: -77.278660, address: 'Estadio Libertad, Pasto' },
-    { lat: 1.218915, lng: -77.281944, address: 'Parque Infantil, Pasto' },
-    { lat: 1.220019, lng: -77.298537, address: 'Alvernia, Pasto' },
-    { lat: 1.223789, lng: -77.283255, address: 'Centro de Pasto, Nariño' },
-    { lat: 1.214567, lng: -77.275432, address: 'Terminal de Transportes, Pasto' }
-  ];
-
-  return pastoLocations.filter(location =>
-    location.address.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 5);
+  // Deshabilitar ubicaciones de prueba - devolver array vacío
+  return [];
 };
 
 // Cálculo local de distancia usando fórmula de Haversine

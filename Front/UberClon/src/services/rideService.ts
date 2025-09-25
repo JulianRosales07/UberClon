@@ -115,7 +115,42 @@ export const getNearbyDrivers = (location: Location): Promise<Driver[]> => {
   });
 };
 
-// Simular solicitud de viaje
+// Crear solicitud de viaje en el backend
+export const createRideRequest = async (
+  passengerId: string,
+  passengerName: string,
+  pickup: Location,
+  destination: Location,
+  estimatedFare: number
+): Promise<any> => {
+  try {
+    const response = await fetch('http://localhost:3001/api/rides/request', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        passengerId,
+        passengerName,
+        pickup,
+        destination,
+        estimatedFare
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al crear solicitud de viaje');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error en createRideRequest:', error);
+    throw error;
+  }
+};
+
+// Simular solicitud de viaje (mantener para compatibilidad)
 export const requestRide = (pickup: Location, destination: Location, fare: number): Promise<Trip> => {
   return new Promise((resolve) => {
     setTimeout(() => {

@@ -1,6 +1,7 @@
 const express = require('express');
 const authRoutes = require('../auth/routes/authRoutes');
 const tripRoutes = require('../trips/routes/tripRoutes');
+const rideRoutes = require('../trips/routes/rideRoutes');
 const driverRoutes = require('../drivers/routes/driverRoutes');
 const paymentRoutes = require('../payments/routes/paymentRoutes');
 // const locationRoutes = require('../locations/routes/locationRoutes');
@@ -12,6 +13,7 @@ const router = express.Router();
 // Rutas de la API
 router.use('/auth', authRoutes);
 router.use('/trips', tripRoutes);
+router.use('/rides', rideRoutes);
 router.use('/drivers', driverRoutes);
 router.use('/payments', paymentRoutes);
 // router.use('/locations', locationRoutes);
@@ -39,6 +41,7 @@ router.get('/info', (req, res) => {
       endpoints: {
         auth: '/api/auth',
         trips: '/api/trips',
+        rides: '/api/rides',
         drivers: '/api/drivers',
         payments: '/api/payments',
         locations: '/api/locations',

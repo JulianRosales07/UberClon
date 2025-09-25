@@ -1,9 +1,20 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const routes = require('./src/routes');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 
 console.log('🚀 Iniciando servidor UberClon Backend...');
@@ -60,12 +71,16 @@ app.use((req, res) => {
   });
 });
 
+// Configurar Socket.IO
+require('./src/shared/socketService')(io);
+
 // Iniciar servidor
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ UberClon Backend ejecutándose en puerto ${PORT}`);
   console.log(`📍 API disponible en: http://localhost:${PORT}`);
   console.log(`📖 Documentación: http://localhost:${PORT}/api/info`);
   console.log(`🌍 Frontend esperado en: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`🔌 WebSocket habilitado para notificaciones en tiempo real`);
 });
 
-module.exports = app;
+module.exports = { app, server, io };
