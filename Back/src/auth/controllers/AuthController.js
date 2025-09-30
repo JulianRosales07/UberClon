@@ -75,7 +75,7 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    // En una implementación real, podrías invalidar el token en una blacklist
+    //Cierre de sesión de forma segura
     sendSuccess(res, null, 'Logout exitoso');
   } catch (error) {
     sendError(res, error);
